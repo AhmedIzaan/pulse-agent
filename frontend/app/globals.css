@@ -2,26 +2,126 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  html {
+    background-color: #EDE6D6;
+    color: #2B2A25;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    background-color: #EDE6D6;
+    color: #2B2A25;
+  }
+
+  /* Keyboard focus — 2px Walnut outline, no browser default blue */
+  *:focus-visible {
+    outline: 2px solid #8B6F47;
+    outline-offset: 2px;
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@layer components {
+  /* Double rule — used only under masthead */
+  .rule-double {
+    border-top: 1px solid #A8A092;
+    padding-top: 2px;
+    border-bottom: none;
+    position: relative;
+  }
+  .rule-double::after {
+    content: "";
+    display: block;
+    border-top: 1px solid #A8A092;
+    margin-top: 2px;
+  }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  /* Stamped tag — rectangular, bordered, uppercase mono */
+  .tag {
+    display: inline-block;
+    font-family: var(--font-ibm-mono), monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border: 1px solid currentColor;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  /* Margin annotation — the signature italic walnut note */
+  .margin-note {
+    font-style: italic;
+    color: #8B6F47;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Entry rule — thin single line between digest entries */
+  .entry-rule {
+    border-top: 1px solid rgba(168, 160, 146, 0.3);
+  }
+
+  /* Primary button */
+  .btn-primary {
+    background: #2B2A25;
+    color: #EDE6D6;
+    padding: 10px 24px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    transition: background-color 150ms;
+    display: inline-block;
+    text-decoration: none;
+  }
+  .btn-primary:hover {
+    background: #8B6F47;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    background: transparent;
+    color: #2B2A25;
+    padding: 10px 24px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #2B2A25;
+    border-radius: 0;
+    cursor: pointer;
+    transition: background-color 150ms;
+    display: inline-block;
+    text-decoration: none;
+  }
+  .btn-secondary:hover {
+    background: rgba(43, 42, 37, 0.06);
+  }
+
+  /* Wax button — one per screen max, urgent/primary CTA only */
+  .btn-wax {
+    background: #B23A2E;
+    color: #EDE6D6;
+    padding: 10px 24px;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    display: inline-block;
+    text-decoration: none;
   }
 }

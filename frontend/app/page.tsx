@@ -1,101 +1,106 @@
-import Image from "next/image";
+import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+const SAMPLE_ENTRIES = [
+  {
+    tag: "AI Research",
+    tagColor: "text-moss border-moss",
+    title: "Anthropic releases interpretability findings on chain-of-thought faithfulness",
+    body: "Researchers found that models sometimes reason correctly in scratchpads while producing outputs inconsistent with that reasoning — raising questions about whether visible reasoning is the actual decision process.",
+    annotation: "Directly relevant to your interest in AI safety tooling — the gap between stated and actual reasoning is the core problem you have been tracking.",
+    source: "arxiv.org",
+    time: "06:14",
+  },
+  {
+    tag: "Systems",
+    tagColor: "text-walnut border-walnut",
+    title: "Linux 6.10 lands memory-folios optimization, showing 8% throughput gain in benchmarks",
+    body: "The folio work merged over the last two kernel cycles finally lands measurable gains in real-world file I/O workloads, particularly for large sequential reads common in database and ML training pipelines.",
+    annotation: "Worth a close read if you are still profiling the data loader bottleneck — the gains are in exactly the path you were benchmarking.",
+    source: "lwn.net",
+    time: "05:52",
+  },
+];
+
+function today() {
+  return new Date().toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export default async function HomePage() {
+  const { userId } = auth();
+  if (userId) redirect("/dashboard");
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="min-h-screen bg-vellum font-body">
+      <div className="max-w-2xl mx-auto px-6 py-10">
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        {/* Masthead */}
+        <header className="flex items-baseline justify-between">
+          <span className="font-display font-black text-3xl tracking-tight text-ink">
+            PULSE
+          </span>
+          <span className="font-mono text-xs text-pencil">{today()}</span>
+        </header>
+
+        {/* Double rule */}
+        <div className="mt-3 border-t border-pencil" />
+        <div className="mt-[3px] border-t border-pencil mb-8" />
+
+        {/* Lede */}
+        <p className="text-ink text-base leading-reading mb-2">
+          A daily field log, built for people who follow ideas seriously.
+        </p>
+        <p className="text-pencil text-sm leading-reading mb-8">
+          Tell Pulse what you care about. Every morning it reads the web for you — research papers,
+          developer forums, industry news — filters the noise, and delivers ten entries worth your time.
+        </p>
+
+        <div className="flex gap-3 mb-14">
+          <Link href="/sign-up" className="btn-wax">
+            Start your digest
+          </Link>
+          <Link href="/sign-in" className="btn-secondary">
+            Sign in
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Sample entries */}
+        <div className="mb-5">
+          <span className="font-mono text-xs text-pencil uppercase tracking-widest">
+            Sample · {today()}
+          </span>
+        </div>
+
+        {SAMPLE_ENTRIES.map((entry, i) => (
+          <article key={i} className={i > 0 ? "entry-rule pt-6 mt-6" : ""}>
+            <div className="mb-2">
+              <span className={`tag ${entry.tagColor}`}>{entry.tag}</span>
+            </div>
+            <h2 className="font-display font-semibold text-xl text-ink leading-tight tracking-tight mb-3">
+              {entry.title}
+            </h2>
+            <p className="text-ink text-sm leading-reading mb-3">{entry.body}</p>
+            <p className="margin-note">— {entry.annotation}</p>
+            <div className="flex gap-4 mt-3">
+              <span className="font-mono text-xs text-pencil">{entry.source}</span>
+              <span className="font-mono text-xs text-pencil">{entry.time}</span>
+            </div>
+          </article>
+        ))}
+
+        {/* Footer rule */}
+        <div className="entry-rule mt-10 pt-6">
+          <p className="font-mono text-xs text-pencil">
+            Ten entries. Every morning. Nothing more.
+          </p>
+        </div>
+
+      </div>
     </div>
   );
 }
