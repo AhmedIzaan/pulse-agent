@@ -6,8 +6,16 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
 
-    # Database
+    # Database — auto-normalize postgresql:// → postgresql+asyncpg://
     database_url: str = ""
+
+    @property
+    def async_database_url(self) -> str:
+        url = self.database_url
+        if url.startswith("postgresql://") or url.startswith("postgres://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        return url
 
     # Clerk
     clerk_secret_key: str = ""
