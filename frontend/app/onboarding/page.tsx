@@ -1,0 +1,226 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+
+const DELIVERY_TIMES = [
+  "06:00", "07:00", "08:00", "09:00", "10:00",
+  "12:00", "14:00", "16:00", "18:00", "20:00",
+];
+
+function today() {
+  return new Date().toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+}
+
+export default function OnboardingPage() {
+  const { getToken } = useAuth();
+  const router = useRouter();
+
+  const [interests, setInterests] = useState("");
+  const [deliveryTime, setDeliveryTime] = useState("08:00");
+  const [timezone, setTimezone] = useState("UTC");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [prefilling, setPrefilling] = useState(true);
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+
+    async function loadExisting() {
+      try {
+        const token = await getToken();
+        const res = await fetch(`${apiUrl}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setInterests(data.interests);
+          setDeliveryTime(data.delivery_time);
+          setTimezone(data.timezone);
+        }
+      } catch {
+        // no existing profile — fine, start blank
+      } finally {
+        setPrefilling(false);
+      }
+    }
+
+    loadExisting();
+  }, [getToken, apiUrl]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!interests.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const token = await getToken();
+      const res = await fetch(`${apiUrl}/api/profile`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          interests,
+          delivery_time: deliveryTime,
+          timezone,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.detail || "Something went wrong. Try again.");
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch {
+      setError("Could not reach the server. Check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const charsLeft = 2000 - interests.length;
+
+  return (
+    <div className="min-h-screen bg-vellum font-body">
+      <div className="max-w-2xl mx-auto px-6 py-10">
+
+        {/* Masthead */}
+        <header className="flex items-baseline justify-between">
+          <span className="font-display font-black text-3xl tracking-tight text-ink">
+            PULSE
+          </span>
+          <span className="font-mono text-xs text-pencil">{today()}</span>
+        </header>
+
+        {/* Double rule */}
+        <div className="mt-3 border-t border-pencil" />
+        <div className="mt-[3px] border-t border-pencil mb-10" />
+
+        {/* Header */}
+        <div className="mb-6">
+          <span className="tag text-walnut border-walnut">Profile setup</span>
+        </div>
+
+        <h1 className="font-display font-bold text-2xl text-ink tracking-tight mb-2">
+          What are you following right now?
+        </h1>
+        <p className="text-pencil text-sm mb-1">
+          Write in plain English — topics, domains, questions, or projects you want
+          Pulse to track each day.
+        </p>
+        <p className="margin-note mb-10">
+          — The more specific you are, the sharper your digest will be.
+        </p>
+
+        {prefilling ? (
+          <p className="font-mono text-xs text-pencil">Loading...</p>
+        ) : (
+          <form onSubmit={handleSubmit}>
+
+            {/* Interests */}
+            <div className="mb-8">
+              <label className="block font-mono text-xs text-pencil uppercase tracking-widest mb-2">
+                Your interests
+              </label>
+              <textarea
+                value={interests}
+                onChange={(e) => setInterests(e.target.value.slice(0, 2000))}
+                rows={8}
+                placeholder="e.g. I am a software engineer interested in LLM tooling, systems programming in Rust, Y Combinator funding rounds, and multi-agent AI research papers..."
+                className="w-full bg-vellum border border-ink text-ink font-body text-sm leading-reading p-4 resize-none focus:outline-none focus:border-walnut placeholder:text-pencil"
+              />
+              <div className="flex justify-end mt-1">
+                <span
+                  className={`font-mono text-xs ${
+                    charsLeft < 100 ? "text-wax" : "text-pencil"
+                  }`}
+                >
+                  {charsLeft} characters remaining
+                </span>
+              </div>
+            </div>
+
+            {/* Delivery time */}
+            <div className="mb-6">
+              <label className="block font-mono text-xs text-pencil uppercase tracking-widest mb-2">
+                Delivery time
+              </label>
+              <div className="relative inline-block">
+                <select
+                  value={deliveryTime}
+                  onChange={(e) => setDeliveryTime(e.target.value)}
+                  className="bg-vellum border border-ink text-ink font-mono text-sm py-2 pl-3 pr-10 focus:outline-none focus:border-walnut appearance-none cursor-pointer"
+                >
+                  {DELIVERY_TIMES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-pencil">
+                  ▾
+                </span>
+              </div>
+              <p className="font-mono text-xs text-pencil mt-2">
+                Your digest will be compiled and ready at this time each morning.
+              </p>
+            </div>
+
+            {/* Timezone */}
+            <div className="mb-10">
+              <label className="block font-mono text-xs text-pencil uppercase tracking-widest mb-2">
+                Timezone
+              </label>
+              <input
+                type="text"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                className="bg-vellum border border-ink text-ink font-mono text-sm py-2 px-3 w-64 focus:outline-none focus:border-walnut"
+              />
+              <p className="font-mono text-xs text-pencil mt-2">
+                IANA format — e.g. America/New_York, Europe/London, Asia/Karachi
+              </p>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <p className="font-mono text-xs text-wax mb-6">{error}</p>
+            )}
+
+            {/* Submit */}
+            <div className="flex items-center gap-6">
+              <button
+                type="submit"
+                disabled={loading || !interests.trim()}
+                className="btn-wax disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {loading ? "Saving..." : "Start my digest"}
+              </button>
+              <span className="font-mono text-xs text-pencil">
+                You can edit this any time from settings.
+              </span>
+            </div>
+
+          </form>
+        )}
+
+        {/* Footer rule */}
+        <div className="entry-rule mt-16 pt-6">
+          <p className="font-mono text-xs text-pencil">
+            Ten entries. Every morning. Nothing more.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
