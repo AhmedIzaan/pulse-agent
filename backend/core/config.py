@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     pinecone_api_key: str = ""
     pinecone_index_name: str = "pulse-articles"
 
+    # Serper (Google News)
+    serper_api_key: str = ""
+
     # Resend
     resend_api_key: str = ""
     resend_from_email: str = "digest@pulse.ai"
