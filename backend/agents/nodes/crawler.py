@@ -33,7 +33,9 @@ Return:
 - arxiv_queries: up to 3 ArXiv keyword queries (only if the profile includes research or academic topics, otherwise empty)
 - serper_queries: up to 3 Google News search queries
 
-Be specific — generic queries return noise."""
+Be specific — generic queries return noise.
+
+Respond with valid JSON only. No explanation."""
 
 
 def _keyword_plan(interests: str) -> CrawlPlan:
@@ -63,7 +65,7 @@ async def _plan_crawl(interests: str) -> CrawlPlan:
             model="deepseek-v4-flash",
             api_key=settings.deepseek_api_key,
             base_url=settings.deepseek_base_url,
-        ).with_structured_output(CrawlPlan)
+        ).with_structured_output(CrawlPlan, method="json_mode")
         return await llm.ainvoke(_PLAN_PROMPT.format(interests=interests))
     except Exception:
         return _keyword_plan(interests)
