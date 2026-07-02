@@ -1,9 +1,12 @@
+import asyncio
 import hashlib
 from datetime import datetime
 
+from pinecone import Pinecone
 from sqlalchemy import select
 
 from agents.state import PipelineState, RawArticle
+from core.config import settings
 from db.models import Article
 from db.session import AsyncSessionLocal
 
@@ -32,6 +35,60 @@ def _parse_datetime(value: str | None) -> datetime | None:
         return None
 
 
+def _embed_texts(texts: list[str]) -> list[list[float]]:
+    pc = Pinecone(api_key=settings.pinecone_api_key)
+    result = pc.inference.embed(
+        model="multilingual-e5-large",
+        inputs=texts,
+        parameters={"input_type": "passage"},
+    )
+    return [r.values for r in result]
+
+
+async def _upsert_to_pinecone(articles: list[RawArticle], user_id: str) -> dict[str, str]:
+    """Returns mapping of db_id → pinecone_id for successfully upserted articles."""
+    if not articles:
+        return {}
+
+    texts = [
+        f"{a['title']} {(a.get('raw_content') or '')[:500]}"
+        for a in articles
+    ]
+
+    loop = asyncio.get_event_loop()
+    try:
+        embeddings = await loop.run_in_executor(None, _embed_texts, texts)
+    except Exception:
+        return {}
+
+    pc = Pinecone(api_key=settings.pinecone_api_key)
+    index = pc.Index(settings.pinecone_index_name)
+
+    vectors = []
+    id_map: dict[str, str] = {}
+    for article, embedding in zip(articles, embeddings):
+        db_id = article.get("db_id", "")
+        pinecone_id = f"{user_id}_{db_id}"
+        vectors.append({
+            "id": pinecone_id,
+            "values": embedding,
+            "metadata": {
+                "article_id": db_id,
+                "user_id": user_id,
+                "url": article["url"],
+                "source": article["source"],
+            },
+        })
+        id_map[db_id] = pinecone_id
+
+    try:
+        await loop.run_in_executor(None, lambda: index.upsert(vectors=vectors))
+    except Exception:
+        return {}
+
+    return id_map
+
+
 async def store_raw(state: PipelineState) -> dict:
     raw_articles = state.get("raw_articles", [])
     user_id = state.get("user_id", "")
@@ -47,7 +104,6 @@ async def store_raw(state: PipelineState) -> dict:
             url = article["url"]
             content_hash = _content_hash(article)
 
-            # Skip if URL already stored for this user
             result = await db.execute(
                 select(Article).where(
                     Article.user_id == user_id,
@@ -78,5 +134,24 @@ async def store_raw(state: PipelineState) -> dict:
                 continue
 
         await db.commit()
+
+    # Upsert new articles to Pinecone (only those with a fresh db_id)
+    new_articles = [a for a in enriched if a.get("db_id") and not a.get("pinecone_id")]
+    pinecone_map = await _upsert_to_pinecone(new_articles, user_id)
+
+    # Attach pinecone_ids and update DB records
+    if pinecone_map:
+        async with AsyncSessionLocal() as db:
+            for article in new_articles:
+                pid = pinecone_map.get(article.get("db_id", ""))
+                if pid:
+                    article["pinecone_id"] = pid
+                    result = await db.execute(
+                        select(Article).where(Article.id == article["db_id"])
+                    )
+                    db_article = result.scalar_one_or_none()
+                    if db_article:
+                        db_article.pinecone_id = pid
+            await db.commit()
 
     return {"raw_articles": enriched, "errors": errors}
