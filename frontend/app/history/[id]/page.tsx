@@ -1,10 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import RunDigestButton from "./RunDigestButton";
-import GeneratingView from "./GeneratingView";
-import SiteNav from "../../components/SiteNav";
-import ArticleEntry, { type Article } from "../../components/ArticleEntry";
+import SiteNav from "../../../components/SiteNav";
+import ArticleEntry, { type Article } from "../../../components/ArticleEntry";
 
 type Digest = {
   id: string;
@@ -17,16 +15,17 @@ type Digest = {
 function formatDate(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("en-US", {
+    weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 }
 
-export default async function DashboardPage({
-  searchParams,
+export default async function DigestDetailPage({
+  params,
 }: {
-  searchParams?: { generating?: string };
+  params: { id: string };
 }) {
   const { getToken } = auth();
   const token = await getToken();
@@ -35,26 +34,15 @@ export default async function DashboardPage({
   let digest: Digest | null = null;
   if (token) {
     try {
-      const res = await fetch(`${apiUrl}/api/digest/today`, {
+      const res = await fetch(`${apiUrl}/api/digest/${params.id}`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
       if (res.ok) {
         digest = await res.json();
       }
-    } catch {
-      // backend unreachable — show empty state
-    }
+    } catch {}
   }
-
-  const displayDate = (digest?.date
-    ? formatDate(digest.date)
-    : new Date().toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-  );
 
   return (
     <div className="min-h-screen bg-vellum font-body">
@@ -69,7 +57,9 @@ export default async function DashboardPage({
             PULSE
           </Link>
           <div className="flex items-center gap-4">
-            <span className="font-mono text-xs text-pencil">{displayDate}</span>
+            <span className="font-mono text-xs text-pencil">
+              {digest ? formatDate(digest.date) : "Archive"}
+            </span>
             <UserButton afterSignOutUrl="/" />
           </div>
         </header>
@@ -77,14 +67,12 @@ export default async function DashboardPage({
         <div className="mt-3 border-t border-pencil" />
         <div className="mt-[3px] border-t border-pencil mb-6" />
 
-        <SiteNav current="today" />
+        <SiteNav current="archive" />
 
-        {searchParams?.generating === "1" ? (
-          <GeneratingView />
-        ) : digest && digest.articles.length > 0 ? (
+        {digest && digest.articles.length > 0 ? (
           <>
             <p className="font-mono text-[11px] text-pencil uppercase tracking-widest mb-8">
-              {digest.article_count} entries · your daily field log
+              {digest.article_count} entries · from the archive
             </p>
 
             {digest.articles.map((article, i) => (
@@ -94,42 +82,27 @@ export default async function DashboardPage({
         ) : (
           <div className="py-10">
             <div className="mb-4">
-              <span className="tag text-pencil border-pencil">No entries yet</span>
+              <span className="tag text-pencil border-pencil">Not found</span>
             </div>
-
             <h2 className="font-display font-semibold text-2xl text-ink tracking-tight mb-3">
-              Your first digest has not arrived yet.
+              This digest could not be loaded.
             </h2>
-
-            <p className="text-pencil text-sm leading-reading mb-2">
-              Set up your interest profile and Pulse will start building your daily log.
-              Your first digest will arrive the next morning after you finish onboarding.
+            <p className="text-pencil text-sm leading-reading mb-8">
+              It may have been removed, or the link is incorrect.
             </p>
-
-            <p className="margin-note mb-8">
-              — Once your digest is ready, ten entries will appear here each morning.
-            </p>
-
-            <Link href="/onboarding" className="btn-wax">
-              Set up your profile
+            <Link href="/history" className="btn-secondary">
+              Back to archive
             </Link>
-            <RunDigestButton />
           </div>
         )}
 
-        {/* Footer */}
         <div className="entry-rule mt-16 pt-6">
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-xs text-pencil">
-              Ten entries. Every morning. Nothing more.
-            </p>
-            <Link
-              href="/history"
-              className="font-mono text-[11px] text-pencil hover:text-walnut transition-colors"
-            >
-              Past digests →
-            </Link>
-          </div>
+          <Link
+            href="/history"
+            className="font-mono text-[11px] text-pencil hover:text-walnut transition-colors"
+          >
+            ← All past digests
+          </Link>
         </div>
 
       </div>

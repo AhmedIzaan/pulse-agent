@@ -110,6 +110,15 @@
     background: rgba(43, 42, 37, 0.06);
   }
 
+  /* Tip rotation on the compiling screen */
+  @keyframes tip-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-tip-fade {
+    animation: tip-fade 500ms ease-out;
+  }
+
   /* Wax button — one per screen max, urgent/primary CTA only */
   .btn-wax {
     background: #B23A2E;
