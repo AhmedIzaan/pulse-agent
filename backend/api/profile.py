@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api")
 
 class ProfileRequest(BaseModel):
     interests: str = Field(..., max_length=2000)
-    delivery_time: str = Field("08:00", pattern=r"^\d{2}:\d{2}$")
+    delivery_time: str = Field("08:00", pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
     timezone: str = Field("UTC", max_length=64)
 
 

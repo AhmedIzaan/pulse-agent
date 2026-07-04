@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
@@ -10,6 +11,8 @@ from agents.fetchers.rss import rss_fetch
 from agents.fetchers.serper import serper_fetch
 from agents.state import PipelineState, RawArticle
 from core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class CrawlPlan(BaseModel):
@@ -76,10 +79,18 @@ async def crawler(state: PipelineState) -> dict:
     if not profile:
         return {"raw_articles": [], "errors": ["Cannot crawl: no profile loaded"]}
 
+    logger.info("[2/6] crawler: planning crawl from interest profile")
     try:
         plan = await _plan_crawl(profile["interests"])
     except Exception as exc:
+        logger.warning("crawler: planning failed: %s", exc)
         return {"raw_articles": [], "errors": [f"Crawl planning failed: {exc}"]}
+
+    logger.info(
+        "crawler: fetching rss=%d hn=%d reddit=%d arxiv=%d serper=%d",
+        len(plan.rss_feeds), len(plan.hn_queries), len(plan.subreddits),
+        len(plan.arxiv_queries), len(plan.serper_queries),
+    )
 
     results = await asyncio.gather(
         rss_fetch(plan.rss_feeds),
@@ -95,8 +106,10 @@ async def crawler(state: PipelineState) -> dict:
     source_names = ["rss", "hn", "reddit", "arxiv", "serper"]
     for name, result in zip(source_names, results):
         if isinstance(result, Exception):
+            logger.warning("crawler: %s fetcher error: %s", name, result)
             errors.append(f"{name} fetcher error: {result}")
         else:
+            logger.info("crawler: %s returned %d articles", name, len(result))
             all_articles.extend(result)
 
     # Deduplicate by URL
@@ -108,4 +121,12 @@ async def crawler(state: PipelineState) -> dict:
             seen.add(url)
             deduped.append(article)
 
-    return {"raw_articles": deduped, "errors": errors}
+    logger.info("crawler: %d total → %d after dedup", len(all_articles), len(deduped))
+
+    # Safety cap — only the top ~12 survive filtering anyway, no need to
+    # store/embed hundreds of extra articles when a source over-returns.
+    capped = deduped[:200]
+    if len(deduped) > len(capped):
+        logger.info("crawler: capping %d → %d articles", len(deduped), len(capped))
+
+    return {"raw_articles": capped, "errors": errors}

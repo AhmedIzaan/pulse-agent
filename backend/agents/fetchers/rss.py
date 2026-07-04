@@ -9,7 +9,7 @@ _HEADERS = {"User-Agent": "PulseDigestBot/1.0"}
 def _parse_content(content: str) -> list[RawArticle]:
     feed = feedparser.parse(content)
     articles: list[RawArticle] = []
-    for entry in feed.entries:
+    for entry in feed.entries[:20]:
         link = entry.get("link", "")
         if not link:
             continue

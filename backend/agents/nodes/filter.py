@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import re
 
 from openai import AsyncOpenAI
@@ -7,6 +8,8 @@ from pinecone import Pinecone
 
 from agents.state import PipelineState, RawArticle
 from core.config import settings
+
+logger = logging.getLogger(__name__)
 
 _SYSTEM = """\
 You are a relevance scoring assistant for a personalized news digest.
@@ -31,7 +34,8 @@ async def _pinecone_scores(profile_interests: str, articles: list[RawArticle], u
     loop = asyncio.get_event_loop()
     try:
         embedding = await loop.run_in_executor(None, _embed_query, profile_interests)
-    except Exception:
+    except Exception as exc:
+        logger.warning("filter: profile embedding failed, skipping Pinecone boost: %s", exc)
         return {}
 
     pc = Pinecone(api_key=settings.pinecone_api_key)
@@ -62,7 +66,8 @@ async def _pinecone_scores(profile_interests: str, articles: list[RawArticle], u
                 if article_id:
                     scores[article_id] = match.score
         return scores
-    except Exception:
+    except Exception as exc:
+        logger.warning("filter: Pinecone query failed, skipping boost: %s", exc)
         return {}
 
 
@@ -112,6 +117,8 @@ async def filter_articles(state: PipelineState) -> dict:
     if not raw_articles or not profile:
         return {"filtered_articles": raw_articles, "errors": []}
 
+    logger.info("[4/6] filter: scoring %d raw articles", len(raw_articles))
+
     # Stage 1 — deduplicate by content_hash
     seen: set[str] = set()
     deduped: list[RawArticle] = []
@@ -121,8 +128,11 @@ async def filter_articles(state: PipelineState) -> dict:
             seen.add(key)
             deduped.append(a)
 
+    logger.info("filter: %d after content-hash dedup", len(deduped))
+
     # Stage 2 — Pinecone semantic pre-filter (boost scores, non-blocking)
     pinecone_scores = await _pinecone_scores(profile["interests"], deduped, user_id)
+    logger.info("filter: %d articles boosted by Pinecone similarity", len(pinecone_scores))
 
     # Stage 3 — LLM relevance scoring in batches of 10
     client = AsyncOpenAI(
@@ -137,6 +147,7 @@ async def filter_articles(state: PipelineState) -> dict:
         tasks.append(_llm_score_batch(client, profile["interests"], deduped[i:i + 10], i))
         offsets.append(i)
 
+    logger.info("filter: sending %d batches to DeepSeek for scoring", len(tasks))
     results = await asyncio.gather(*tasks, return_exceptions=True)
     for offset, result in zip(offsets, results):
         if isinstance(result, Exception):
@@ -157,12 +168,13 @@ async def filter_articles(state: PipelineState) -> dict:
         pinecone_boost = pinecone_scores.get(article.get("db_id", ""), 0.0) * 2
         combined[idx] = llm + pinecone_boost
 
-    # Keep top 12 with LLM score >= 5
+    # Keep top 10 with LLM score >= 5 — the product promise is ten entries
     ranked = sorted(combined.items(), key=lambda x: x[1], reverse=True)
     filtered = []
-    for idx, score in ranked[:12]:
+    for idx, score in ranked[:10]:
         if llm_scores.get(idx, 0) >= 5.0:
             filtered.append({**deduped[idx], "relevance_score": combined[idx]})
 
     filtered.sort(key=lambda a: a.get("relevance_score", 0), reverse=True)
+    logger.info("filter: kept %d articles above threshold", len(filtered))
     return {"filtered_articles": filtered, "errors": errors}

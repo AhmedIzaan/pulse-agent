@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import re
 
 from openai import AsyncOpenAI
@@ -9,6 +10,8 @@ from agents.state import PipelineState, SynthesizedArticle
 from core.config import settings
 from db.models import Article
 from db.session import AsyncSessionLocal
+
+logger = logging.getLogger(__name__)
 
 _SYSTEM = """\
 You are a synthesis assistant for a personalized AI news digest.
@@ -56,6 +59,8 @@ async def synthesize(state: PipelineState) -> dict:
 
     if not filtered or not profile:
         return {"synthesized_articles": [], "errors": []}
+
+    logger.info("[5/6] synthesis: writing summaries for %d articles", len(filtered))
 
     client = AsyncOpenAI(
         api_key=settings.deepseek_api_key,
@@ -108,4 +113,5 @@ async def synthesize(state: PipelineState) -> dict:
                     db_article.passed_filter = True
             await db.commit()
 
+    logger.info("synthesis: done — %d synthesized, %d errors", len(synthesized), len(errors))
     return {"synthesized_articles": synthesized, "errors": errors}

@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     resend_from_email: str = "digest@pulse.ai"
 
+    # Cron — shared secret for the /api/pipeline/cron Railway Cron endpoint
+    cron_secret: str = ""
+
     # CORS — comma-separated list of allowed origins
     allowed_origins: str = "http://localhost:3000"
 
