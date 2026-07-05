@@ -49,6 +49,7 @@ class InterestProfile(Base):
     interests: Mapped[str] = mapped_column(Text, nullable=False)
     delivery_time: Mapped[time] = mapped_column(Time, nullable=False, server_default=text("'08:00'"))
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, server_default=text("'UTC'"))
+    email_digest: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

@@ -130,22 +130,27 @@ async def deliver(state: PipelineState) -> dict:
 
         await db.commit()
 
-    # Send email via Resend — temporarily disabled while testing dashboard rendering
+    # Send email via Resend — only if the user opted in on their profile
+    profile = state.get("profile")
+    wants_email = bool(profile and profile.get("email_digest"))
     email_sent = False
-    # if settings.resend_api_key and user_email:
-    #     try:
-    #         digest_date = today.strftime("%B %d, %Y")
-    #         html = _build_email_html(synthesized, digest_date)
-    #         resend.api_key = settings.resend_api_key
-    #         resend.Emails.send({
-    #             "from": settings.resend_from_email,
-    #             "to": [user_email],
-    #             "subject": f"Your Pulse digest — {today.strftime('%B %d')}",
-    #             "html": html,
-    #         })
-    #         email_sent = True
-    #     except Exception as exc:
-    #         errors.append(f"Email send failed (digest still saved): {exc}")
+    if wants_email and settings.resend_api_key and user_email:
+        try:
+            digest_date = today.strftime("%B %d, %Y")
+            html = _build_email_html(synthesized, digest_date)
+            resend.api_key = settings.resend_api_key
+            resend.Emails.send({
+                "from": settings.resend_from_email,
+                "to": [user_email],
+                "subject": f"Your Pulse digest — {today.strftime('%B %d')}",
+                "html": html,
+            })
+            email_sent = True
+            logger.info("delivery: digest email sent to user %s", user_id)
+        except Exception as exc:
+            errors.append(f"Email send failed (digest still saved): {exc}")
+    elif wants_email and not user_email:
+        logger.warning("delivery: user %s opted into email but has no address on file", user_id)
 
     # Mark digest as delivered
     async with AsyncSessionLocal() as db:

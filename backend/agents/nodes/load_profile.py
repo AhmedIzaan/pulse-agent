@@ -39,5 +39,6 @@ async def load_profile(state: PipelineState) -> dict:
                 interests=profile.interests,
                 delivery_time=str(profile.delivery_time),
                 timezone=profile.timezone,
+                email_digest=profile.email_digest,
             ),
         }

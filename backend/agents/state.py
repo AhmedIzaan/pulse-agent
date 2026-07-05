@@ -8,6 +8,7 @@ class ProfileData(TypedDict):
     interests: str
     delivery_time: str
     timezone: str
+    email_digest: bool
 
 
 class RawArticle(TypedDict):

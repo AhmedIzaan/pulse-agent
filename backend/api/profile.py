@@ -16,6 +16,8 @@ class ProfileRequest(BaseModel):
     interests: str = Field(..., max_length=2000)
     delivery_time: str = Field("08:00", pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
     timezone: str = Field("UTC", max_length=64)
+    email_digest: bool = False
+    email: str | None = Field(None, max_length=255)  # Clerk primary email, for digest delivery
 
 
 async def _get_or_create_user(clerk_user_id: str, db: AsyncSession) -> User:
@@ -36,6 +38,10 @@ async def upsert_profile(
 ):
     user = await _get_or_create_user(clerk_user_id, db)
 
+    # Keep the user's email current — needed for digest delivery
+    if body.email:
+        user.email = body.email
+
     result = await db.execute(
         select(InterestProfile).where(InterestProfile.user_id == user.id)
     )
@@ -50,12 +56,14 @@ async def upsert_profile(
             interests=body.interests,
             delivery_time=dt,
             timezone=body.timezone,
+            email_digest=body.email_digest,
         )
         db.add(profile)
     else:
         profile.interests = body.interests
         profile.delivery_time = dt
         profile.timezone = body.timezone
+        profile.email_digest = body.email_digest
 
     await db.commit()
     await db.refresh(profile)
@@ -66,6 +74,7 @@ async def upsert_profile(
         "interests": profile.interests,
         "delivery_time": profile.delivery_time.strftime("%H:%M"),
         "timezone": profile.timezone,
+        "email_digest": profile.email_digest,
         "updated_at": profile.updated_at.isoformat(),
     }
 
@@ -93,6 +102,7 @@ async def get_profile(
         "interests": profile.interests,
         "delivery_time": profile.delivery_time.strftime("%H:%M"),
         "timezone": profile.timezone,
+        "email_digest": profile.email_digest,
         "created_at": profile.created_at.isoformat(),
         "updated_at": profile.updated_at.isoformat(),
     }
