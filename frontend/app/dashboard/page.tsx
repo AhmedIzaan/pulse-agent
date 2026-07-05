@@ -33,15 +33,23 @@ export default async function DashboardPage({
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
   let digest: Digest | null = null;
+  let hasProfile = false;
   if (token) {
     try {
-      const res = await fetch(`${apiUrl}/api/digest/today`, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
-      if (res.ok) {
-        digest = await res.json();
+      const [digestRes, profileRes] = await Promise.all([
+        fetch(`${apiUrl}/api/digest/today`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        }),
+        fetch(`${apiUrl}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        }),
+      ]);
+      if (digestRes.ok) {
+        digest = await digestRes.json();
       }
+      hasProfile = profileRes.ok;
     } catch {
       // backend unreachable — show empty state
     }
@@ -98,22 +106,34 @@ export default async function DashboardPage({
             </div>
 
             <h2 className="font-display font-semibold text-2xl text-ink tracking-tight mb-3">
-              Your first digest has not arrived yet.
+              {hasProfile
+                ? "Today's digest has not arrived yet."
+                : "Your field log is empty."}
             </h2>
 
-            <p className="text-pencil text-sm leading-reading mb-2">
-              Set up your interest profile and Pulse will start building your daily log.
-              Your first digest will arrive the next morning after you finish onboarding.
-            </p>
-
-            <p className="margin-note mb-8">
-              — Once your digest is ready, ten entries will appear here each morning.
-            </p>
-
-            <Link href="/onboarding" className="btn-wax">
-              Set up your profile
-            </Link>
-            <RunDigestButton />
+            {hasProfile ? (
+              <>
+                <p className="text-pencil text-sm leading-reading mb-2">
+                  Your next digest arrives on schedule tomorrow morning — or you
+                  can compile one right now.
+                </p>
+                <p className="margin-note mb-4">
+                  — Ten entries, scored and summarized against your profile.
+                </p>
+                <RunDigestButton />
+              </>
+            ) : (
+              <>
+                <p className="text-pencil text-sm leading-reading mb-2">
+                  Pulse needs to know what you follow before it can read the web
+                  for you. Open the <Link href="/onboarding" className="text-walnut underline underline-offset-2">Profile</Link> tab
+                  and describe your interests in plain English.
+                </p>
+                <p className="margin-note">
+                  — Once your profile is saved, ten entries will appear here each morning.
+                </p>
+              </>
+            )}
           </div>
         )}
 

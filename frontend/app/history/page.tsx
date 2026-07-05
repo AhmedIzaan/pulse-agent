@@ -20,18 +20,26 @@ function formatDate(iso: string): string {
   });
 }
 
-export default async function HistoryPage() {
+export default async function HistoryPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string };
+}) {
   const { getToken } = auth();
   const token = await getToken();
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const q = searchParams?.q?.trim() ?? "";
 
   let digests: DigestSummary[] = [];
   if (token) {
     try {
-      const res = await fetch(`${apiUrl}/api/digest/history`, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
+      const res = await fetch(
+        `${apiUrl}/api/digest/history?q=${encodeURIComponent(q)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        }
+      );
       if (res.ok) {
         const data = await res.json();
         digests = data.digests ?? [];
@@ -59,10 +67,23 @@ export default async function HistoryPage() {
 
         <SiteNav current="archive" />
 
+        {/* Search — plain GET form, no JS needed */}
+        <form method="get" className="mb-8">
+          <input
+            type="text"
+            name="q"
+            defaultValue={q}
+            placeholder="Search past entries..."
+            className="w-full bg-vellum border border-pencil text-ink font-mono text-sm py-2 px-3 focus:outline-none focus:border-walnut placeholder:text-pencil"
+          />
+        </form>
+
         {digests.length > 0 ? (
           <>
             <p className="font-mono text-[11px] text-pencil uppercase tracking-widest mb-8">
-              {digests.length} past {digests.length === 1 ? "digest" : "digests"}
+              {q
+                ? `${digests.length} ${digests.length === 1 ? "digest mentions" : "digests mention"} “${q}”`
+                : `${digests.length} past ${digests.length === 1 ? "digest" : "digests"}`}
             </p>
 
             <div>
@@ -100,17 +121,27 @@ export default async function HistoryPage() {
         ) : (
           <div className="py-10">
             <div className="mb-4">
-              <span className="tag text-pencil border-pencil">Empty</span>
+              <span className="tag text-pencil border-pencil">
+                {q ? "No matches" : "Empty"}
+              </span>
             </div>
             <h2 className="font-display font-semibold text-2xl text-ink tracking-tight mb-3">
-              No past digests yet.
+              {q ? `Nothing found for “${q}”.` : "No past digests yet."}
             </h2>
             <p className="text-pencil text-sm leading-reading mb-8">
-              Your digest history will appear here once Pulse has delivered your first digest.
+              {q
+                ? "Try a different word — search covers entry titles and summaries."
+                : "Your digest history will appear here once Pulse has delivered your first digest."}
             </p>
-            <Link href="/dashboard" className="btn-secondary">
-              Back to dashboard
-            </Link>
+            {q ? (
+              <Link href="/history" className="btn-secondary">
+                Clear search
+              </Link>
+            ) : (
+              <Link href="/dashboard" className="btn-secondary">
+                Back to dashboard
+              </Link>
+            )}
           </div>
         )}
 

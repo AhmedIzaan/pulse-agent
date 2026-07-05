@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
@@ -9,6 +9,29 @@ import SiteNav from "../../components/SiteNav";
 const DELIVERY_TIMES = [
   "06:00", "07:00", "08:00", "09:00", "10:00",
   "12:00", "14:00", "16:00", "18:00", "20:00",
+];
+
+const STARTER_PROFILES: { label: string; text: string }[] = [
+  {
+    label: "Tech",
+    text: "I follow software engineering and AI closely — new developer tools, LLM releases and research, open-source projects gaining traction, systems programming, and major launches from companies like OpenAI, Anthropic, and Google DeepMind.",
+  },
+  {
+    label: "Gaming",
+    text: "I follow the games industry — new releases and reviews, indie game development, game engine news (Unreal, Unity, Godot), esports results, and business news about studios and publishers.",
+  },
+  {
+    label: "Music",
+    text: "I follow music — new album releases and reviews across genres, music production tools and techniques, the streaming industry, vinyl culture, and stories about how artists make a living today.",
+  },
+  {
+    label: "Finance",
+    text: "I follow markets and finance — macro trends, central bank policy, notable startup funding rounds and IPOs, fintech products, and long-form analysis on investing and the global economy.",
+  },
+  {
+    label: "Literature",
+    text: "I follow books and writing — notable new fiction and non-fiction releases, literary prize news, essays on the craft of writing, the publishing industry, and thoughtful long-form criticism.",
+  },
 ];
 
 function today() {
@@ -116,7 +139,10 @@ export default function OnboardingPage() {
           >
             PULSE
           </Link>
-          <span className="font-mono text-xs text-pencil">{today()}</span>
+          <div className="flex items-center gap-4">
+            <span className="font-mono text-xs text-pencil">{today()}</span>
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </header>
 
         {/* Double rule */}
@@ -145,6 +171,28 @@ export default function OnboardingPage() {
           <p className="font-mono text-xs text-pencil">Loading...</p>
         ) : (
           <form onSubmit={handleSubmit}>
+
+            {/* Starter profiles */}
+            <div className="mb-6">
+              <p className="font-mono text-xs text-pencil uppercase tracking-widest mb-2">
+                Start from a template
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {STARTER_PROFILES.map((p) => (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => setInterests(p.text)}
+                    className="tag text-walnut border-walnut hover:bg-walnut hover:text-vellum transition-colors cursor-pointer"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <p className="margin-note mt-2">
+                — Templates are just a starting point. Edit the text to make it yours.
+              </p>
+            </div>
 
             {/* Interests */}
             <div className="mb-8">
