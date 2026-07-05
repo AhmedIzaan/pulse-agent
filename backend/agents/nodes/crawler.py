@@ -30,13 +30,22 @@ PROFILE:
 {interests}
 
 Return:
-- rss_feeds: up to 5 relevant RSS feed URLs (well-known, publicly accessible)
-- hn_queries: up to 3 Hacker News search terms
-- subreddits: up to 5 subreddit names (without r/) relevant to the profile
-- arxiv_queries: up to 3 ArXiv keyword queries (only if the profile includes research or academic topics, otherwise empty)
-- serper_queries: up to 3 Google News search queries
+- rss_feeds: up to 5 RSS feed URLs from well-known publications that SPECIALIZE \
+in the profile's domain (music press for a music profile, financial press for a \
+finance profile, and so on). Prefer domain publications over general tech feeds.
+- hn_queries: up to 3 Hacker News search terms — ONLY if the profile is about \
+technology, programming, startups, or science. Hacker News is a technology \
+forum: for any other domain return an empty list, because music/finance/culture \
+queries there return only tech projects about the topic.
+- subreddits: up to 5 subreddit names (without r/) where enthusiasts of this \
+exact domain gather.
+- arxiv_queries: up to 3 ArXiv queries — ONLY if the profile explicitly \
+mentions research papers or academic literature. Otherwise an empty list.
+- serper_queries: up to 3 Google News search queries phrased the way the \
+domain's own journalism is written.
 
-Be specific — generic queries return noise.
+Match every source to the profile's domain. Do not inject technology or AI \
+angles unless the profile asks for them. Be specific — generic queries return noise.
 
 Respond with valid JSON only. No explanation."""
 

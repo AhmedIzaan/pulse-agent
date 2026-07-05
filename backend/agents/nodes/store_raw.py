@@ -1,14 +1,14 @@
 import asyncio
 import hashlib
 import logging
-from datetime import datetime
+from datetime import date, datetime, timedelta, timezone
 
 from pinecone import Pinecone
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from agents.state import PipelineState, RawArticle
 from core.config import settings
-from db.models import Article
+from db.models import Article, Digest
 from db.session import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
@@ -100,6 +100,48 @@ async def _upsert_to_pinecone(articles: list[RawArticle], user_id: str) -> dict[
     return id_map
 
 
+async def _prune_old_vectors(user_id: str) -> None:
+    """Delete Pinecone vectors older than one day (free-tier storage limit).
+
+    Only the vectors go — the DB rows stay for the archive and for
+    cross-day dedup, which work off Postgres, not Pinecone.
+    """
+    cutoff = datetime.now(timezone.utc) - timedelta(days=1)
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(Article.id, Article.pinecone_id).where(
+                Article.user_id == user_id,
+                Article.pinecone_id.is_not(None),
+                Article.fetched_at < cutoff,
+            )
+        )
+        rows = result.all()
+        if not rows:
+            return
+
+        pc = Pinecone(api_key=settings.pinecone_api_key)
+        index = pc.Index(settings.pinecone_index_name)
+        pinecone_ids = [pid for _, pid in rows]
+
+        loop = asyncio.get_event_loop()
+        try:
+            for i in range(0, len(pinecone_ids), 100):
+                chunk = pinecone_ids[i:i + 100]
+                await loop.run_in_executor(None, lambda c=chunk: index.delete(ids=c))
+        except Exception as exc:
+            logger.warning("store_raw: Pinecone prune failed (will retry next run): %s", exc)
+            return
+
+        await db.execute(
+            update(Article)
+            .where(Article.id.in_([aid for aid, _ in rows]))
+            .values(pinecone_id=None)
+        )
+        await db.commit()
+        logger.info("store_raw: pruned %d old vectors from Pinecone", len(pinecone_ids))
+
+
 async def store_raw(state: PipelineState) -> dict:
     raw_articles = state.get("raw_articles", [])
     user_id = state.get("user_id", "")
@@ -118,19 +160,41 @@ async def store_raw(state: PipelineState) -> dict:
     logger.info("[3/6] store_raw: storing %d articles + embedding to Pinecone", len(valid))
     enriched: list[RawArticle] = []
 
+    hashes = {a["url"]: _content_hash(a) for a in valid}
+    today = date.today()
+
     async with AsyncSessionLocal() as db:
-        # One batched lookup instead of a round-trip per article
+        # One batched lookup instead of a round-trip per article. The digest
+        # join tells us which of these were already delivered on an earlier
+        # day — those are excluded so users never see the same entry twice
+        # (and so today's run can't steal an article out of a past digest).
         result = await db.execute(
-            select(Article).where(
+            select(Article, Digest.date)
+            .outerjoin(Digest, Article.digest_id == Digest.id)
+            .where(
                 Article.user_id == user_id,
-                Article.url.in_([a["url"] for a in valid]),
+                (Article.url.in_(list(hashes)))
+                | (Article.content_hash.in_(list(hashes.values()))),
             )
         )
-        existing_by_url = {a.url: a for a in result.scalars()}
+        existing_by_url: dict[str, Article] = {}
+        delivered_urls: set[str] = set()
+        delivered_hashes: set[str] = set()
+        for db_article, digest_date in result.all():
+            if digest_date is not None and digest_date < today:
+                delivered_urls.add(db_article.url)
+                if db_article.content_hash:
+                    delivered_hashes.add(db_article.content_hash)
+            else:
+                existing_by_url[db_article.url] = db_article
 
         pending: list[tuple[RawArticle, Article, str]] = []
+        skipped_delivered = 0
         for article in valid:
-            content_hash = _content_hash(article)
+            content_hash = hashes[article["url"]]
+            if article["url"] in delivered_urls or content_hash in delivered_hashes:
+                skipped_delivered += 1
+                continue
             existing = existing_by_url.get(article["url"])
             if existing:
                 enriched.append({
@@ -152,6 +216,12 @@ async def store_raw(state: PipelineState) -> dict:
             )
             db.add(db_article)
             pending.append((article, db_article, content_hash))
+
+        if skipped_delivered:
+            logger.info(
+                "store_raw: skipped %d articles already delivered in past digests",
+                skipped_delivered,
+            )
 
         try:
             await db.flush()
@@ -181,6 +251,12 @@ async def store_raw(state: PipelineState) -> dict:
                     if db_article:
                         db_article.pinecone_id = pid
             await db.commit()
+
+    # Free-tier housekeeping: drop vectors older than a day
+    try:
+        await _prune_old_vectors(user_id)
+    except Exception as exc:
+        logger.warning("store_raw: vector prune skipped: %s", exc)
 
     logger.info("store_raw: done — %d stored, %d errors", len(enriched), len(errors))
     return {"raw_articles": enriched, "errors": errors}

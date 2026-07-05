@@ -5,18 +5,67 @@ import re
 
 from openai import AsyncOpenAI
 from pinecone import Pinecone
+from sqlalchemy import select
 
 from agents.state import PipelineState, RawArticle
 from core.config import settings
+from db.models import Article, ArticleClick, ArticleFeedback
+from db.session import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
 
 _SYSTEM = """\
 You are a relevance scoring assistant for a personalized news digest.
 Score each article 0–10 based on relevance to the user profile provided.
+
+Score against the profile AS WRITTEN. An article is not relevant merely
+because it applies AI or technology to the user's topic — unless the profile
+itself expresses interest in tools or technology, treat tech-angle articles
+about the topic as weak matches. Aim for the mix of entries a devoted reader
+of this profile would expect from a specialist publication in their field.
+
+If taste signals are provided (titles the user liked, disliked, or clicked),
+weigh them: score articles similar to liked/clicked ones higher, and articles
+similar to disliked ones lower.
 Return a JSON object: {"scores": [{"index": 0, "score": 7.5}, ...]}
 Higher scores mean more relevant. Be strict — most articles should score below 5.\
 """
+
+
+async def _taste_signals(user_id: str) -> str:
+    """Recent 👍/👎/click titles, formatted for the scoring prompt."""
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(Article.title, ArticleFeedback.feedback)
+            .join(Article, Article.id == ArticleFeedback.article_id)
+            .where(ArticleFeedback.user_id == user_id)
+            .order_by(ArticleFeedback.created_at.desc())
+            .limit(30)
+        )
+        feedback_rows = result.all()
+
+        result = await db.execute(
+            select(Article.title)
+            .join(ArticleClick, ArticleClick.article_id == Article.id)
+            .where(ArticleClick.user_id == user_id)
+            .order_by(ArticleClick.clicked_at.desc())
+            .limit(15)
+        )
+        clicked = [r[0] for r in result.all()]
+
+    liked = [t for t, f in feedback_rows if f == "up"]
+    disliked = [t for t, f in feedback_rows if f == "down"]
+
+    parts = []
+    if liked:
+        parts.append("LIKED:\n" + "\n".join(f"- {t}" for t in liked[:10]))
+    if disliked:
+        parts.append("DISLIKED:\n" + "\n".join(f"- {t}" for t in disliked[:10]))
+    clicked_only = [t for t in clicked if t not in liked and t not in disliked]
+    if clicked_only:
+        parts.append("CLICKED:\n" + "\n".join(f"- {t}" for t in clicked_only[:10]))
+
+    return "\n\n".join(parts)
 
 
 def _embed_query(text: str) -> list[float]:
@@ -74,6 +123,7 @@ async def _pinecone_scores(profile_interests: str, articles: list[RawArticle], u
 async def _llm_score_batch(
     client: AsyncOpenAI,
     profile_interests: str,
+    taste_signals: str,
     batch: list[RawArticle],
     offset: int,
 ) -> list[dict]:
@@ -81,7 +131,10 @@ async def _llm_score_batch(
         f"{offset + i}. {a['title']}\n   {(a.get('raw_content') or '')[:300]}"
         for i, a in enumerate(batch)
     )
-    user_msg = f"USER PROFILE:\n{profile_interests}\n\nARTICLES TO SCORE:\n{articles_text}"
+    user_msg = f"USER PROFILE:\n{profile_interests}\n\n"
+    if taste_signals:
+        user_msg += f"TASTE SIGNALS (from past digests):\n{taste_signals}\n\n"
+    user_msg += f"ARTICLES TO SCORE:\n{articles_text}"
 
     resp = await client.chat.completions.create(
         model="deepseek-v4-flash",
@@ -134,6 +187,15 @@ async def filter_articles(state: PipelineState) -> dict:
     pinecone_scores = await _pinecone_scores(profile["interests"], deduped, user_id)
     logger.info("filter: %d articles boosted by Pinecone similarity", len(pinecone_scores))
 
+    # Personalization: recent likes/dislikes/clicks steer the LLM scoring
+    try:
+        taste_signals = await _taste_signals(user_id)
+    except Exception as exc:
+        logger.warning("filter: could not load taste signals: %s", exc)
+        taste_signals = ""
+    if taste_signals:
+        logger.info("filter: applying taste signals from past feedback")
+
     # Stage 3 — LLM relevance scoring in batches of 10
     client = AsyncOpenAI(
         api_key=settings.deepseek_api_key,
@@ -144,7 +206,7 @@ async def filter_articles(state: PipelineState) -> dict:
     tasks = []
     offsets = []
     for i in range(0, len(deduped), 10):
-        tasks.append(_llm_score_batch(client, profile["interests"], deduped[i:i + 10], i))
+        tasks.append(_llm_score_batch(client, profile["interests"], taste_signals, deduped[i:i + 10], i))
         offsets.append(i)
 
     logger.info("filter: sending %d batches to DeepSeek for scoring", len(tasks))
@@ -168,12 +230,22 @@ async def filter_articles(state: PipelineState) -> dict:
         pinecone_boost = pinecone_scores.get(article.get("db_id", ""), 0.0) * 2
         combined[idx] = llm + pinecone_boost
 
-    # Keep top 10 with LLM score >= 5 — the product promise is ten entries
+    # Keep top 10 with LLM score >= 5 — the product promise is ten entries.
+    # Cap any single source at 4 slots so one venue (e.g. Hacker News)
+    # cannot monopolize the digest when the crawl pool skews its way.
     ranked = sorted(combined.items(), key=lambda x: x[1], reverse=True)
     filtered = []
-    for idx, score in ranked[:10]:
-        if llm_scores.get(idx, 0) >= 5.0:
-            filtered.append({**deduped[idx], "relevance_score": combined[idx]})
+    per_source: dict[str, int] = {}
+    for idx, score in ranked:
+        if len(filtered) >= 10:
+            break
+        if llm_scores.get(idx, 0) < 5.0:
+            continue
+        source = deduped[idx]["source"]
+        if per_source.get(source, 0) >= 4:
+            continue
+        per_source[source] = per_source.get(source, 0) + 1
+        filtered.append({**deduped[idx], "relevance_score": combined[idx]})
 
     filtered.sort(key=lambda a: a.get("relevance_score", 0), reverse=True)
     logger.info("filter: kept %d articles above threshold", len(filtered))
