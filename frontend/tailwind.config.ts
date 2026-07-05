@@ -9,16 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        vellum: "#EDE6D6",
-        ink: "#2B2A25",
-        walnut: "#8B6F47",
-        moss: "#3D5A4C",
-        wax: "#B23A2E",
-        pencil: "#A8A092",
+        opsblack: "#0A0E1A",
+        surface: "#0F1624",
+        "surface-raised": "#151E30",
+        amber: "#E8A838",
+        "amber-dim": "#A87820",
+        "field-green": "#4A5C3A",
+        urgent: "#C0392B",
+        parchment: "#D4CEBC",
+        muted: "#6B7280",
+        line: "#2A3445",
       },
       fontFamily: {
-        display: ["var(--font-fraunces)", "Georgia", "serif"],
-        body: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-barlow)", "sans-serif"],
+        body: ["var(--font-ibm-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-ibm-mono)", "monospace"],
       },
       borderRadius: {
@@ -29,7 +33,7 @@ const config: Config = {
         lg: "0",
         xl: "0",
         "2xl": "0",
-        full: "0",
+        full: "9999px", // exception: the pulsing status dot only
       },
       boxShadow: {
         DEFAULT: "none",

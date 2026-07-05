@@ -19,17 +19,17 @@ function timeAgo(isoString: string | null): string {
   if (!isoString) return "";
   const diff = Date.now() - new Date(isoString).getTime();
   const h = Math.floor(diff / 3_600_000);
-  if (h < 1) return "< 1h ago";
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+  if (h < 1) return "< 1H AGO";
+  if (h < 24) return `${h}H AGO`;
+  return `${Math.floor(h / 24)}D AGO`;
 }
 
 export default function ArticleEntry({
   article,
-  isFirst,
+  index,
 }: {
   article: Article;
-  isFirst: boolean;
+  index: number;
 }) {
   const { getToken } = useAuth();
   const [feedback, setFeedback] = useState<"up" | "down" | null>(
@@ -37,6 +37,7 @@ export default function ArticleEntry({
   );
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const refNumber = `#${String(index + 1).padStart(4, "0")}`;
 
   async function post(path: string, body: object) {
     try {
@@ -71,34 +72,41 @@ export default function ArticleEntry({
   }
 
   return (
-    <article className={isFirst ? "pb-8" : "entry-rule pt-8 pb-8"}>
-      <div className="flex items-center gap-3 mb-3">
-        <span className="tag text-walnut border-walnut">{article.source}</span>
+    <article className="file-entry py-1 mb-10 last:mb-0">
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-mono text-[11px] tracking-widest text-amber uppercase">
+          {refNumber} · {article.source}
+        </span>
         {article.published_at && (
-          <span className="font-mono text-[10px] text-pencil">
+          <span className="font-mono text-[11px] tracking-widest text-muted">
             {timeAgo(article.published_at)}
           </span>
         )}
       </div>
 
-      <h2 className="font-display font-semibold text-xl text-ink tracking-tight leading-snug mb-3">
+      <h2 className="font-display font-bold text-3xl text-parchment leading-tight tracking-tight mb-3">
         <a
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
           onClick={logClick}
-          className="hover:text-walnut transition-colors duration-100"
+          className="hover:text-amber transition-colors duration-100"
         >
           {article.title}
         </a>
       </h2>
 
       {article.summary && (
-        <p className="text-ink text-sm leading-reading mb-3">{article.summary}</p>
+        <p className="text-parchment text-base leading-reading mb-4">{article.summary}</p>
       )}
 
       {article.why_it_matters && (
-        <p className="margin-note mb-4">— {article.why_it_matters}</p>
+        <div className="analyst-note mb-4">
+          <span className="analyst-note-label">Analyst note</span>
+          <p className="text-parchment text-base italic leading-reading">
+            {article.why_it_matters}
+          </p>
+        </div>
       )}
 
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -107,35 +115,31 @@ export default function ArticleEntry({
           target="_blank"
           rel="noopener noreferrer"
           onClick={logClick}
-          className="font-mono text-[11px] text-pencil hover:text-walnut transition-colors duration-100"
+          className="font-mono text-xs uppercase tracking-widest text-amber-dim hover:text-amber transition-colors duration-100"
         >
-          Read article →
+          Open source →
         </a>
 
         <button
           onClick={() => handleFeedback("up")}
-          aria-label="More like this"
-          title="More like this"
-          className={`font-mono text-[11px] transition-colors duration-100 ${
-            feedback === "up"
-              ? "text-moss"
-              : "text-pencil hover:text-moss"
+          aria-label="Relevant"
+          title="Relevant"
+          className={`font-mono text-xs uppercase tracking-widest transition-colors duration-100 ${
+            feedback === "up" ? "text-amber" : "text-muted hover:text-amber"
           }`}
         >
-          ▲ more like this
+          ▲ Relevant
         </button>
 
         <button
           onClick={() => handleFeedback("down")}
-          aria-label="Less like this"
-          title="Less like this"
-          className={`font-mono text-[11px] transition-colors duration-100 ${
-            feedback === "down"
-              ? "text-wax"
-              : "text-pencil hover:text-wax"
+          aria-label="Disregard"
+          title="Disregard"
+          className={`font-mono text-xs uppercase tracking-widest transition-colors duration-100 ${
+            feedback === "down" ? "text-amber" : "text-muted hover:text-amber"
           }`}
         >
-          ▼ less
+          ▼ Disregard
         </button>
       </div>
     </article>

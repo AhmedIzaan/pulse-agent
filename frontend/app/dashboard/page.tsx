@@ -12,15 +12,30 @@ type Digest = {
   status: string;
   article_count: number;
   articles: Article[];
+  created_at: string;
 };
 
 function formatDate(iso: string): string {
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
+  return d
+    .toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase();
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
+}
+
+function estimateReadingMinutes(articles: Article[]): number {
+  const words = articles.reduce((sum, a) => {
+    const text = `${a.summary ?? ""} ${a.why_it_matters ?? ""}`;
+    return sum + text.split(/\s+/).filter(Boolean).length;
+  }, 0);
+  return Math.max(1, Math.round(words / 200));
 }
 
 export default async function DashboardPage({
@@ -55,99 +70,118 @@ export default async function DashboardPage({
     }
   }
 
-  const displayDate = (digest?.date
-    ? formatDate(digest.date)
-    : new Date().toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-  );
+  const hasEntries = Boolean(digest && digest.articles.length > 0);
+  const todayLabel = formatDate(digest?.date ?? new Date().toISOString().slice(0, 10));
 
   return (
-    <div className="min-h-screen bg-vellum font-body">
+    <div className="min-h-screen bg-opsblack font-body animate-page-fade">
       <div className="max-w-2xl mx-auto px-6 py-10">
 
-        {/* Masthead */}
+        {/* Ops header */}
         <header className="flex items-baseline justify-between">
           <Link
             href="/dashboard"
-            className="font-display font-black text-3xl tracking-tight text-ink hover:text-walnut transition-colors"
+            className="font-display font-black text-3xl tracking-tight text-amber uppercase hover:text-amber-dim transition-colors"
           >
-            PULSE
+            MakeDigest
           </Link>
           <div className="flex items-center gap-4">
-            <span className="font-mono text-xs text-pencil">{displayDate}</span>
+            <span className="font-mono text-xs text-muted tracking-widest">
+              DAILY BRIEF · {todayLabel}
+              {digest?.created_at && ` · ${formatTime(digest.created_at)}`}
+            </span>
             <UserButton afterSignOutUrl="/" />
           </div>
         </header>
 
-        <div className="mt-3 border-t border-pencil" />
-        <div className="mt-[3px] border-t border-pencil mb-6" />
+        <div className="mt-3 rule" />
+        <div className="mt-[3px] rule mb-2" />
 
-        <SiteNav current="today" />
+        {/* Agent status strip */}
+        <div className="flex items-center gap-2 py-3 mb-6">
+          <span className={`pulse-dot ${hasEntries ? "" : "opacity-40"}`} style={hasEntries ? { animation: "none" } : undefined} />
+          <span className="font-mono text-xs uppercase tracking-widest text-muted">
+            {hasEntries ? "Brief ready" : "Standing by"}
+          </span>
+        </div>
+
+        <SiteNav current="operations" />
 
         {searchParams?.generating === "1" ? (
           <GeneratingView />
-        ) : digest && digest.articles.length > 0 ? (
+        ) : hasEntries && digest ? (
           <>
-            <p className="font-mono text-[11px] text-pencil uppercase tracking-widest mb-8">
-              {digest.article_count} entries · your daily field log
-            </p>
+            <div className="mb-10">
+              <p className="font-mono text-xs text-amber uppercase tracking-widest mb-2">
+                Situation report · {todayLabel}
+              </p>
+              <div className="rule-section mb-3" />
+              <p className="text-parchment text-base leading-reading">
+                {digest.article_count} items compiled. Estimated reading time:{" "}
+                {estimateReadingMinutes(digest.articles)} minutes.
+              </p>
+            </div>
 
             {digest.articles.map((article, i) => (
-              <ArticleEntry key={article.id} article={article} isFirst={i === 0} />
+              <ArticleEntry key={article.id} article={article} index={i} />
             ))}
           </>
         ) : (
           <div className="py-10">
             <div className="mb-4">
-              <span className="tag text-pencil border-pencil">No entries yet</span>
+              <span className="tag text-muted">No intel available</span>
             </div>
 
-            <h2 className="font-display font-semibold text-2xl text-ink tracking-tight mb-3">
-              {hasProfile
-                ? "Today's digest has not arrived yet."
-                : "Your field log is empty."}
+            <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-3 uppercase">
+              {hasProfile ? "Brief not yet compiled." : "No configuration on file."}
             </h2>
 
             {hasProfile ? (
               <>
-                <p className="text-pencil text-sm leading-reading mb-2">
-                  Your next digest arrives on schedule tomorrow morning — or you
-                  can compile one right now.
+                <p className="text-parchment text-base leading-reading mb-4">
+                  Your next brief compiles on schedule tomorrow morning — or run
+                  your agents now.
                 </p>
-                <p className="margin-note mb-4">
-                  — Ten entries, scored and summarized against your profile.
-                </p>
+                <div className="analyst-note mb-6">
+                  <span className="analyst-note-label">Analyst note</span>
+                  <p className="text-parchment text-base italic leading-reading">
+                    Ten items, scored and summarized against your configuration.
+                  </p>
+                </div>
                 <RunDigestButton />
               </>
             ) : (
               <>
-                <p className="text-pencil text-sm leading-reading mb-2">
-                  Pulse needs to know what you follow before it can read the web
-                  for you. Open the <Link href="/onboarding" className="text-walnut underline underline-offset-2">Profile</Link> tab
-                  and describe your interests in plain English.
+                <p className="text-parchment text-base leading-reading mb-4">
+                  Agents have not been configured to monitor any topics yet.
+                  Open{" "}
+                  <Link href="/onboarding" className="text-amber underline underline-offset-2">
+                    Configuration
+                  </Link>{" "}
+                  and describe what to track.
                 </p>
-                <p className="margin-note">
-                  — Once your profile is saved, ten entries will appear here each morning.
-                </p>
+                <div className="analyst-note">
+                  <span className="analyst-note-label">Analyst note</span>
+                  <p className="text-parchment text-base italic leading-reading">
+                    Once configured, ten items will compile here each morning.
+                  </p>
+                </div>
               </>
             )}
           </div>
         )}
 
         {/* Footer */}
-        <div className="entry-rule mt-16 pt-6">
+        <div className="rule mt-16 pt-6">
           <div className="flex items-center justify-between">
-            <p className="font-mono text-xs text-pencil">
-              Ten entries. Every morning. Nothing more.
+            <p className="font-mono text-xs text-muted uppercase tracking-widest">
+              Agents operate continuously. Ten items. Every morning.
             </p>
             <Link
               href="/history"
-              className="font-mono text-[11px] text-pencil hover:text-walnut transition-colors"
+              className="font-mono text-xs uppercase tracking-widest text-muted hover:text-amber transition-colors"
             >
-              Past digests →
+              View archive →
             </Link>
           </div>
         </div>

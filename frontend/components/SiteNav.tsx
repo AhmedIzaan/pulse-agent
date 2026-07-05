@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-type Page = "today" | "archive" | "profile";
+type Page = "operations" | "archive" | "configuration";
 
 const LINKS: { key: Page; label: string; href: string }[] = [
-  { key: "today", label: "Today", href: "/dashboard" },
+  { key: "operations", label: "Operations", href: "/dashboard" },
   { key: "archive", label: "Archive", href: "/history" },
-  { key: "profile", label: "Profile", href: "/onboarding" },
+  { key: "configuration", label: "Configuration", href: "/onboarding" },
 ];
 
 export default function SiteNav({ current }: { current: Page }) {
@@ -15,7 +15,7 @@ export default function SiteNav({ current }: { current: Page }) {
         link.key === current ? (
           <span
             key={link.key}
-            className="font-mono text-[11px] uppercase tracking-widest text-ink border-b border-ink pb-[2px]"
+            className="font-mono text-sm uppercase tracking-widest text-amber border-b border-amber pb-[2px]"
           >
             {link.label}
           </span>
@@ -23,7 +23,7 @@ export default function SiteNav({ current }: { current: Page }) {
           <Link
             key={link.key}
             href={link.href}
-            className="font-mono text-[11px] uppercase tracking-widest text-pencil hover:text-walnut transition-colors pb-[2px]"
+            className="font-mono text-sm uppercase tracking-widest text-muted hover:text-amber transition-colors pb-[2px]"
           >
             {link.label}
           </Link>

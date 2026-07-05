@@ -30,12 +30,14 @@ export default function RunDigestButton() {
   if (state === "error") {
     return (
       <div className="mt-6">
-        <p className="font-mono text-xs text-wax mb-2">
-          Something went wrong. Make sure your profile is saved and the backend
-          is running, then try again.
+        <p className="font-mono text-xs uppercase tracking-widest text-urgent mb-2">
+          Signal lost
         </p>
-        <button onClick={() => setState("idle")} className="btn-secondary text-sm">
-          Try again
+        <p className="text-parchment text-base leading-reading mb-3">
+          Could not reach the agents. Make sure your configuration is saved and try again.
+        </p>
+        <button onClick={() => setState("idle")} className="btn-ghost">
+          Retry
         </button>
       </div>
     );
@@ -47,7 +49,7 @@ export default function RunDigestButton() {
       disabled={state === "loading"}
       className="btn-primary mt-6 disabled:opacity-40 disabled:cursor-not-allowed"
     >
-      {state === "loading" ? "Starting..." : "Generate my digest now"}
+      {state === "loading" ? "Deploying..." : "Run agents now"}
     </button>
   );
 }

@@ -13,11 +13,9 @@ type DigestSummary = {
 
 function formatDate(iso: string): string {
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  return d
+    .toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase();
 }
 
 export default async function HistoryPage({
@@ -48,22 +46,27 @@ export default async function HistoryPage({
   }
 
   return (
-    <div className="min-h-screen bg-vellum font-body">
+    <div className="min-h-screen bg-opsblack font-body animate-page-fade">
       <div className="max-w-2xl mx-auto px-6 py-10">
 
-        {/* Masthead */}
+        {/* Ops header */}
         <header className="flex items-baseline justify-between">
-          <Link href="/dashboard" className="font-display font-black text-3xl tracking-tight text-ink hover:text-walnut transition-colors">
-            PULSE
+          <Link
+            href="/dashboard"
+            className="font-display font-black text-3xl tracking-tight text-amber uppercase hover:text-amber-dim transition-colors"
+          >
+            MakeDigest
           </Link>
           <div className="flex items-center gap-4">
-            <span className="font-mono text-xs text-pencil">Archive</span>
+            <span className="font-mono text-xs text-muted tracking-widest">
+              BRIEFING ARCHIVE
+            </span>
             <UserButton afterSignOutUrl="/" />
           </div>
         </header>
 
-        <div className="mt-3 border-t border-pencil" />
-        <div className="mt-[3px] border-t border-pencil mb-6" />
+        <div className="mt-3 rule" />
+        <div className="mt-[3px] rule mb-8" />
 
         <SiteNav current="archive" />
 
@@ -73,17 +76,17 @@ export default async function HistoryPage({
             type="text"
             name="q"
             defaultValue={q}
-            placeholder="Search past entries..."
-            className="w-full bg-vellum border border-pencil text-ink font-mono text-sm py-2 px-3 focus:outline-none focus:border-walnut placeholder:text-pencil"
+            placeholder="SEARCH ARCHIVE..."
+            className="field-input w-full font-mono text-sm uppercase tracking-widest"
           />
         </form>
 
         {digests.length > 0 ? (
           <>
-            <p className="font-mono text-[11px] text-pencil uppercase tracking-widest mb-8">
+            <p className="font-mono text-xs text-amber uppercase tracking-widest mb-8">
               {q
-                ? `${digests.length} ${digests.length === 1 ? "digest mentions" : "digests mention"} “${q}”`
-                : `${digests.length} past ${digests.length === 1 ? "digest" : "digests"}`}
+                ? `${digests.length} ${digests.length === 1 ? "record matches" : "records match"} "${q}"`
+                : `${digests.length} ${digests.length === 1 ? "record" : "records"} on file`}
             </p>
 
             <div>
@@ -91,25 +94,28 @@ export default async function HistoryPage({
                 <Link
                   key={d.id}
                   href={`/history/${d.id}`}
-                  className={`block group ${i === 0 ? "pb-6" : "entry-rule pt-6 pb-6"}`}
+                  className={`block group ${i === 0 ? "pb-6" : "rule pt-6 pb-6"}`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-display font-semibold text-base text-ink tracking-tight group-hover:text-walnut transition-colors">
+                      <p className="font-mono text-xs text-amber uppercase tracking-widest mb-1">
+                        #{String(digests.length - i).padStart(4, "0")}
+                      </p>
+                      <p className="font-display font-semibold text-lg text-parchment tracking-tight group-hover:text-amber transition-colors uppercase">
                         {formatDate(d.date)}
                       </p>
-                      <p className="font-mono text-[10px] text-pencil mt-1">
-                        {d.article_count} {d.article_count === 1 ? "entry" : "entries"}
-                        {d.email_sent && " · emailed"}
+                      <p className="font-mono text-xs text-muted uppercase tracking-widest mt-1">
+                        {d.article_count} {d.article_count === 1 ? "item" : "items"}
+                        {d.email_sent && " · transmitted"}
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
                       <span
-                        className={`tag ${d.status === "delivered" ? "text-moss border-moss" : "text-pencil border-pencil"}`}
+                        className={`tag ${d.status === "delivered" ? "text-amber" : "text-muted"}`}
                       >
                         {d.status}
                       </span>
-                      <span className="font-mono text-xs text-pencil group-hover:text-walnut transition-colors">
+                      <span className="font-mono text-xs text-muted group-hover:text-amber transition-colors">
                         →
                       </span>
                     </div>
@@ -121,36 +127,36 @@ export default async function HistoryPage({
         ) : (
           <div className="py-10">
             <div className="mb-4">
-              <span className="tag text-pencil border-pencil">
-                {q ? "No matches" : "Empty"}
+              <span className="tag text-muted">
+                {q ? "No matches" : "No intel available"}
               </span>
             </div>
-            <h2 className="font-display font-semibold text-2xl text-ink tracking-tight mb-3">
-              {q ? `Nothing found for “${q}”.` : "No past digests yet."}
+            <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-3 uppercase">
+              {q ? `Nothing found for "${q}".` : "No briefs on file."}
             </h2>
-            <p className="text-pencil text-sm leading-reading mb-8">
+            <p className="text-parchment text-base leading-reading mb-8">
               {q
-                ? "Try a different word — search covers entry titles and summaries."
-                : "Your digest history will appear here once Pulse has delivered your first digest."}
+                ? "Try a different term — search covers item headlines and field reports."
+                : "Your briefing archive will populate once agents deliver your first brief."}
             </p>
             {q ? (
-              <Link href="/history" className="btn-secondary">
+              <Link href="/history" className="btn-ghost">
                 Clear search
               </Link>
             ) : (
-              <Link href="/dashboard" className="btn-secondary">
-                Back to dashboard
+              <Link href="/dashboard" className="btn-ghost">
+                Back to operations
               </Link>
             )}
           </div>
         )}
 
-        <div className="entry-rule mt-16 pt-6">
+        <div className="rule mt-16 pt-6">
           <Link
             href="/dashboard"
-            className="font-mono text-[11px] text-pencil hover:text-walnut transition-colors"
+            className="font-mono text-xs uppercase tracking-widest text-muted hover:text-amber transition-colors"
           >
-            ← Today&apos;s digest
+            ← Today&apos;s brief
           </Link>
         </div>
 

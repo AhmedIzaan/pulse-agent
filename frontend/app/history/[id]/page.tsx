@@ -14,12 +14,9 @@ type Digest = {
 
 function formatDate(iso: string): string {
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  return d
+    .toLocaleDateString("en-US", { weekday: "long", day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase();
 }
 
 export default async function DigestDetailPage({
@@ -45,63 +42,63 @@ export default async function DigestDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-vellum font-body">
+    <div className="min-h-screen bg-opsblack font-body animate-page-fade">
       <div className="max-w-2xl mx-auto px-6 py-10">
 
-        {/* Masthead */}
+        {/* Ops header */}
         <header className="flex items-baseline justify-between">
           <Link
             href="/dashboard"
-            className="font-display font-black text-3xl tracking-tight text-ink hover:text-walnut transition-colors"
+            className="font-display font-black text-3xl tracking-tight text-amber uppercase hover:text-amber-dim transition-colors"
           >
-            PULSE
+            MakeDigest
           </Link>
           <div className="flex items-center gap-4">
-            <span className="font-mono text-xs text-pencil">
-              {digest ? formatDate(digest.date) : "Archive"}
+            <span className="font-mono text-xs text-muted tracking-widest">
+              {digest ? formatDate(digest.date) : "ARCHIVE RECORD"}
             </span>
             <UserButton afterSignOutUrl="/" />
           </div>
         </header>
 
-        <div className="mt-3 border-t border-pencil" />
-        <div className="mt-[3px] border-t border-pencil mb-6" />
+        <div className="mt-3 rule" />
+        <div className="mt-[3px] rule mb-6" />
 
         <SiteNav current="archive" />
 
         {digest && digest.articles.length > 0 ? (
           <>
-            <p className="font-mono text-[11px] text-pencil uppercase tracking-widest mb-8">
-              {digest.article_count} entries · from the archive
+            <p className="font-mono text-xs text-amber uppercase tracking-widest mb-8">
+              {digest.article_count} items · retrieved from archive
             </p>
 
             {digest.articles.map((article, i) => (
-              <ArticleEntry key={article.id} article={article} isFirst={i === 0} />
+              <ArticleEntry key={article.id} article={article} index={i} />
             ))}
           </>
         ) : (
           <div className="py-10">
             <div className="mb-4">
-              <span className="tag text-pencil border-pencil">Not found</span>
+              <span className="tag text-muted">Record not found</span>
             </div>
-            <h2 className="font-display font-semibold text-2xl text-ink tracking-tight mb-3">
-              This digest could not be loaded.
+            <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-3 uppercase">
+              This brief could not be retrieved.
             </h2>
-            <p className="text-pencil text-sm leading-reading mb-8">
-              It may have been removed, or the link is incorrect.
+            <p className="text-parchment text-base leading-reading mb-8">
+              It may have been removed, or the reference is incorrect.
             </p>
-            <Link href="/history" className="btn-secondary">
+            <Link href="/history" className="btn-ghost">
               Back to archive
             </Link>
           </div>
         )}
 
-        <div className="entry-rule mt-16 pt-6">
+        <div className="rule mt-16 pt-6">
           <Link
             href="/history"
-            className="font-mono text-[11px] text-pencil hover:text-walnut transition-colors"
+            className="font-mono text-xs uppercase tracking-widest text-muted hover:text-amber transition-colors"
           >
-            ← All past digests
+            ← All records
           </Link>
         </div>
 

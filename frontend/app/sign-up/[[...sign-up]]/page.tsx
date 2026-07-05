@@ -2,8 +2,21 @@ import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-vellum">
-      <SignUp afterSignUpUrl="/onboarding" />
+    <div className="flex min-h-screen items-center justify-center bg-opsblack">
+      <SignUp
+        afterSignUpUrl="/onboarding"
+        appearance={{
+          variables: {
+            colorBackground: "#0F1624",
+            colorPrimary: "#E8A838",
+            colorText: "#D4CEBC",
+            colorTextSecondary: "#6B7280",
+            colorInputBackground: "#0A0E1A",
+            colorInputText: "#D4CEBC",
+            borderRadius: "0px",
+          },
+        }}
+      />
     </div>
   );
 }

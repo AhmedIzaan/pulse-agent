@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Barlow_Condensed, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const barlow = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["600", "700", "900"],
-  variable: "--font-fraunces",
+  weight: ["500", "600", "700", "900"],
+  variable: "--font-barlow",
   display: "swap",
 });
 
-const inter = Inter({
+const ibmSans = IBM_Plex_Sans({
   subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-inter",
+  weight: ["300", "400", "500"],
+  variable: "--font-ibm-sans",
   display: "swap",
 });
 
@@ -25,8 +25,8 @@ const ibmMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pulse — Your AI Research Digest",
-  description: "Personalized daily digest of what matters to you",
+  title: "MAKEDIGEST — Daily Intelligence Briefs",
+  description: "Agents scan the web overnight. Ten items land on your desk by morning.",
 };
 
 export default function RootLayout({
@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${fraunces.variable} ${inter.variable} ${ibmMono.variable}`}>
+      <html lang="en" className={`${barlow.variable} ${ibmSans.variable} ${ibmMono.variable}`}>
         <body>{children}</body>
       </html>
     </ClerkProvider>
