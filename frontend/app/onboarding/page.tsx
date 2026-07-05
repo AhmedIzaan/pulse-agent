@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
@@ -42,14 +42,18 @@ function today() {
 
 export default function OnboardingPage() {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const router = useRouter();
 
   const [interests, setInterests] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("08:00");
   const [timezone, setTimezone] = useState("UTC");
+  const [emailDigest, setEmailDigest] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [prefilling, setPrefilling] = useState(true);
+
+  const userEmail = user?.primaryEmailAddress?.emailAddress ?? "";
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -67,6 +71,7 @@ export default function OnboardingPage() {
           setInterests(data.interests);
           setDeliveryTime(data.delivery_time);
           setTimezone(data.timezone);
+          setEmailDigest(Boolean(data.email_digest));
         }
       } catch {
         // no existing profile — fine, start blank
@@ -97,6 +102,8 @@ export default function OnboardingPage() {
           interests,
           delivery_time: deliveryTime,
           timezone,
+          email_digest: emailDigest,
+          email: userEmail || null,
         }),
       });
 
@@ -254,6 +261,32 @@ export default function OnboardingPage() {
               />
               <p className="font-mono text-xs text-pencil mt-2">
                 IANA format — e.g. America/New_York, Europe/London, Asia/Karachi
+              </p>
+            </div>
+
+            {/* Email delivery */}
+            <div className="mb-10">
+              <p className="font-mono text-xs text-pencil uppercase tracking-widest mb-2">
+                Email delivery
+              </p>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={emailDigest}
+                  onChange={(e) => setEmailDigest(e.target.checked)}
+                  className="appearance-none w-4 h-4 mt-[3px] border border-ink bg-vellum checked:bg-walnut checked:border-walnut cursor-pointer shrink-0"
+                />
+                <span className="text-ink text-sm leading-reading">
+                  Email me my digest each morning
+                  {userEmail && (
+                    <span className="block font-mono text-xs text-pencil mt-1">
+                      → {userEmail}
+                    </span>
+                  )}
+                </span>
+              </label>
+              <p className="margin-note mt-2">
+                — Your digest always appears here on the dashboard either way.
               </p>
             </div>
 
