@@ -1,6 +1,8 @@
 import asyncio
 import hmac
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from sqlalchemy import select
@@ -65,16 +67,42 @@ async def pipeline_status(clerk_user_id: str = Depends(get_current_user)):
     return {"running": clerk_user_id in _running}
 
 
+_WEEKDAY_CODES = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+def _is_delivery_day(delivery_days: str, tz_name: str) -> bool:
+    """Whether today (in the user's timezone) is one of their scheduled days."""
+    try:
+        now = datetime.now(ZoneInfo(tz_name or "UTC"))
+    except Exception:
+        now = datetime.now(ZoneInfo("UTC"))
+    today_code = _WEEKDAY_CODES[now.weekday()]
+    days = [d.strip() for d in (delivery_days or "").split(",") if d.strip()]
+    return today_code in days if days else True
+
+
 async def _run_all_pipelines() -> None:
-    """Run the pipeline for every user who has an interest profile."""
+    """Run the pipeline for every user whose schedule includes today."""
     async with AsyncSessionLocal() as db:
         result = await db.execute(
-            select(User).join(InterestProfile, InterestProfile.user_id == User.id)
+            select(User, InterestProfile).join(
+                InterestProfile, InterestProfile.user_id == User.id
+            )
         )
-        users = result.scalars().all()
-        clerk_ids = [u.clerk_user_id for u in users]
+        rows = result.all()
 
-    logger.info("Cron: running pipeline for %d users", len(clerk_ids))
+    clerk_ids = [
+        user.clerk_user_id
+        for user, profile in rows
+        if not profile.paused and _is_delivery_day(profile.delivery_days, profile.timezone)
+    ]
+    paused_count = sum(1 for _, p in rows if p.paused)
+    skipped = len(rows) - len(clerk_ids)
+
+    logger.info(
+        "Cron: running pipeline for %d users (%d skipped — %d paused, %d not their delivery day)",
+        len(clerk_ids), skipped, paused_count, skipped - paused_count,
+    )
     await asyncio.gather(*[_run_pipeline(cid) for cid in clerk_ids], return_exceptions=True)
 
 
