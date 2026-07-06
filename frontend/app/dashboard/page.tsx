@@ -49,6 +49,7 @@ export default async function DashboardPage({
 
   let digest: Digest | null = null;
   let hasProfile = false;
+  let paused = false;
   if (token) {
     try {
       const [digestRes, profileRes] = await Promise.all([
@@ -65,6 +66,10 @@ export default async function DashboardPage({
         digest = await digestRes.json();
       }
       hasProfile = profileRes.ok;
+      if (profileRes.ok) {
+        const profile = await profileRes.json();
+        paused = Boolean(profile.paused);
+      }
     } catch {
       // backend unreachable — show empty state
     }
@@ -99,10 +104,24 @@ export default async function DashboardPage({
 
         {/* Agent status strip */}
         <div className="flex items-center gap-2 py-3 mb-6">
-          <span className={`pulse-dot ${hasEntries ? "" : "opacity-40"}`} style={hasEntries ? { animation: "none" } : undefined} />
-          <span className="font-mono text-xs uppercase tracking-widest text-muted">
-            {hasEntries ? "Brief ready" : "Standing by"}
-          </span>
+          {paused ? (
+            <>
+              <span className="w-1.5 h-1.5 bg-urgent shrink-0" />
+              <span className="font-mono text-xs uppercase tracking-widest text-muted">
+                Stand-down in effect ·{" "}
+                <Link href="/onboarding" className="text-amber hover:text-amber-dim transition-colors">
+                  Resume operations
+                </Link>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className={`pulse-dot ${hasEntries ? "" : "opacity-40"}`} style={hasEntries ? { animation: "none" } : undefined} />
+              <span className="font-mono text-xs uppercase tracking-widest text-muted">
+                {hasEntries ? "Brief ready" : "Standing by"}
+              </span>
+            </>
+          )}
         </div>
 
         <SiteNav current="operations" />
@@ -139,8 +158,9 @@ export default async function DashboardPage({
             {hasProfile ? (
               <>
                 <p className="text-parchment text-base leading-reading mb-4">
-                  Your next brief compiles on schedule tomorrow morning — or run
-                  your agents now.
+                  {paused
+                    ? "Agents are standing down — no briefs compile until you resume operations. You can still run them manually below."
+                    : "Your next brief compiles on schedule tomorrow morning — or run your agents now."}
                 </p>
                 <div className="analyst-note mb-6">
                   <span className="analyst-note-label">Analyst note</span>

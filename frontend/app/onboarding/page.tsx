@@ -11,6 +11,19 @@ const DELIVERY_TIMES = [
   "12:00", "14:00", "16:00", "18:00", "20:00",
 ];
 
+const WEEKDAYS: { code: string; label: string }[] = [
+  { code: "mon", label: "Mon" },
+  { code: "tue", label: "Tue" },
+  { code: "wed", label: "Wed" },
+  { code: "thu", label: "Thu" },
+  { code: "fri", label: "Fri" },
+  { code: "sat", label: "Sat" },
+  { code: "sun", label: "Sun" },
+];
+
+const ALL_DAYS = WEEKDAYS.map((d) => d.code);
+const WEEKDAYS_ONLY = ["mon", "tue", "wed", "thu", "fri"];
+
 const STARTER_PROFILES: { label: string; text: string }[] = [
   {
     label: "Tech",
@@ -49,6 +62,8 @@ export default function OnboardingPage() {
   const [deliveryTime, setDeliveryTime] = useState("08:00");
   const [timezone, setTimezone] = useState("UTC");
   const [emailDigest, setEmailDigest] = useState(false);
+  const [deliveryDays, setDeliveryDays] = useState<string[]>(ALL_DAYS);
+  const [paused, setPaused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [prefilling, setPrefilling] = useState(true);
@@ -72,6 +87,10 @@ export default function OnboardingPage() {
           setDeliveryTime(data.delivery_time);
           setTimezone(data.timezone);
           setEmailDigest(Boolean(data.email_digest));
+          if (Array.isArray(data.delivery_days) && data.delivery_days.length > 0) {
+            setDeliveryDays(data.delivery_days);
+          }
+          setPaused(Boolean(data.paused));
         }
       } catch {
         // no existing profile — fine, start blank
@@ -104,12 +123,20 @@ export default function OnboardingPage() {
           timezone,
           email_digest: emailDigest,
           email: userEmail || null,
+          delivery_days: deliveryDays,
+          paused,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json();
         setError(data.detail || "Configuration rejected. Try again.");
+        return;
+      }
+
+      if (paused) {
+        // Stand-down: save only, no run — agents stay dormant until resumed
+        router.push("/dashboard");
         return;
       }
 
@@ -132,7 +159,14 @@ export default function OnboardingPage() {
     }
   }
 
+  function toggleDay(code: string) {
+    setDeliveryDays((days) =>
+      days.includes(code) ? days.filter((d) => d !== code) : [...days, code]
+    );
+  }
+
   const charsLeft = 2000 - interests.length;
+  const noDaysSelected = deliveryDays.length === 0;
 
   return (
     <div className="min-h-screen bg-opsblack font-body animate-page-fade">
@@ -177,6 +211,36 @@ export default function OnboardingPage() {
           <p className="font-mono text-xs text-muted uppercase tracking-widest">Retrieving configuration...</p>
         ) : (
           <form onSubmit={handleSubmit}>
+
+            {/* Agent status — stand down / resume */}
+            <div className={`mb-8 border p-4 ${paused ? "border-urgent" : "border-line"}`}>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  {paused ? (
+                    <span className="w-1.5 h-1.5 bg-urgent shrink-0" />
+                  ) : (
+                    <span className="pulse-dot" />
+                  )}
+                  <div>
+                    <p className="font-mono text-xs uppercase tracking-widest text-parchment">
+                      {paused ? "Stand-down in effect" : "Agents active"}
+                    </p>
+                    <p className="font-mono text-xs text-muted mt-1">
+                      {paused
+                        ? "Scheduled runs are suspended. Save to apply."
+                        : "Agents deploy on your schedule."}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPaused((p) => !p)}
+                  className={paused ? "btn-secondary" : "btn-ghost"}
+                >
+                  {paused ? "Resume operations" : "Stand down agents"}
+                </button>
+              </div>
+            </div>
 
             {/* Starter profiles */}
             <div className="mb-6">
@@ -244,6 +308,58 @@ export default function OnboardingPage() {
               </p>
             </div>
 
+            {/* Schedule — which days agents deploy */}
+            <div className="mb-6">
+              <label className="block font-mono text-xs text-muted uppercase tracking-widest mb-2">
+                Deployment schedule
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {WEEKDAYS.map((day) => {
+                  const active = deliveryDays.includes(day.code);
+                  return (
+                    <button
+                      key={day.code}
+                      type="button"
+                      onClick={() => toggleDay(day.code)}
+                      aria-pressed={active}
+                      className={`tag cursor-pointer transition-colors ${
+                        active
+                          ? "text-opsblack bg-amber border-amber"
+                          : "text-muted hover:text-amber"
+                      }`}
+                    >
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-4 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setDeliveryDays(ALL_DAYS)}
+                  className="font-mono text-xs text-amber-dim hover:text-amber uppercase tracking-widest transition-colors"
+                >
+                  Daily
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeliveryDays(WEEKDAYS_ONLY)}
+                  className="font-mono text-xs text-amber-dim hover:text-amber uppercase tracking-widest transition-colors"
+                >
+                  Weekdays only
+                </button>
+              </div>
+              {noDaysSelected ? (
+                <p className="font-mono text-xs uppercase tracking-widest text-urgent">
+                  Select at least one day
+                </p>
+              ) : (
+                <p className="font-mono text-xs text-muted">
+                  Agents deploy only on the selected days.
+                </p>
+              )}
+            </div>
+
             {/* Timezone */}
             <div className="mb-10">
               <label className="block font-mono text-xs text-muted uppercase tracking-widest mb-2">
@@ -265,6 +381,15 @@ export default function OnboardingPage() {
               <p className="font-mono text-xs text-muted uppercase tracking-widest mb-2">
                 Transmission
               </p>
+              <div className="flex items-start gap-3 mb-3">
+                <span className="field-checkbox opacity-50" style={{ background: "#E8A838", borderColor: "#E8A838" }} />
+                <span className="text-parchment text-base leading-reading">
+                  Operations dashboard
+                  <span className="block font-mono text-xs text-muted mt-1">
+                    Always on — your brief compiles here every scheduled run
+                  </span>
+                </span>
+              </div>
               <label className="flex items-start gap-3 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -295,10 +420,14 @@ export default function OnboardingPage() {
             <div className="flex items-center gap-6">
               <button
                 type="submit"
-                disabled={loading || !interests.trim()}
+                disabled={loading || !interests.trim() || noDaysSelected}
                 className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {loading ? "Deploying agents..." : "Deploy agents"}
+                {loading
+                  ? "Saving..."
+                  : paused
+                  ? "Save configuration"
+                  : "Deploy agents"}
               </button>
               <span className="font-mono text-xs text-muted">
                 Edit this configuration any time.
