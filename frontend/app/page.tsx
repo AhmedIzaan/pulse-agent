@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import MarginConsole from "../components/MarginConsole";
 
 const AGENTS = [
   {
@@ -106,6 +107,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-opsblack font-body animate-page-fade">
+      <MarginConsole />
       <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 py-10">
 
         {/* Ops header */}

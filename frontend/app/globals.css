@@ -178,6 +178,17 @@
     animation: field-note-fade 500ms ease-out;
   }
 
+  /* ── Margin console scan-line (landing page only) ── */
+  @keyframes scan-vertical {
+    0%   { top: 0%;   opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+  .animate-scan-vertical {
+    animation: scan-vertical 3.2s ease-in-out infinite;
+  }
+
   /* ── New entry ticking in ── */
   @keyframes ticker-in {
     from { opacity: 0; transform: translateY(-8px); }
