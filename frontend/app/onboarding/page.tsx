@@ -85,7 +85,9 @@ export default function OnboardingPage() {
           const data = await res.json();
           setInterests(data.interests);
           setDeliveryTime(data.delivery_time);
-          setTimezone(data.timezone);
+          // timezone intentionally NOT loaded from the server — the
+          // browser-detected zone always wins and re-saves on submit,
+          // so a stale/wrong stored value heals itself
           setEmailDigest(Boolean(data.email_digest));
           if (Array.isArray(data.delivery_days) && data.delivery_days.length > 0) {
             setDeliveryDays(data.delivery_days);
@@ -360,19 +362,17 @@ export default function OnboardingPage() {
               )}
             </div>
 
-            {/* Timezone */}
+            {/* Timezone — detected from the browser, not hand-typed */}
             <div className="mb-10">
-              <label className="block font-mono text-xs text-muted uppercase tracking-widest mb-2">
+              <p className="font-mono text-xs text-muted uppercase tracking-widest mb-2">
                 Timezone
-              </label>
-              <input
-                type="text"
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="field-input font-mono text-base w-64"
-              />
+              </p>
+              <p className="font-mono text-base text-ink">
+                {timezone}
+                <span className="tag text-amber ml-3 align-middle">Detected</span>
+              </p>
               <p className="font-mono text-xs text-muted mt-2">
-                IANA format — e.g. America/New_York, Europe/London, Asia/Karachi
+                Set automatically from this device. Your delivery time is in this zone.
               </p>
             </div>
 
