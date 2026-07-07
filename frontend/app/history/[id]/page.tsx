@@ -42,7 +42,7 @@ export default async function DigestDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-opsblack font-body animate-page-fade">
+    <div className="min-h-screen bg-paper font-body animate-page-fade">
       <div className="max-w-2xl mx-auto px-6 py-10">
 
         {/* Ops header */}
@@ -81,10 +81,10 @@ export default async function DigestDetailPage({
             <div className="mb-4">
               <span className="tag text-muted">Record not found</span>
             </div>
-            <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-3 uppercase">
+            <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-3 uppercase">
               This brief could not be retrieved.
             </h2>
-            <p className="text-parchment text-base leading-reading mb-8">
+            <p className="text-ink text-base leading-reading mb-8">
               It may have been removed, or the reference is incorrect.
             </p>
             <Link href="/history" className="btn-ghost">

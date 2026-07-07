@@ -169,7 +169,7 @@ export default function OnboardingPage() {
   const noDaysSelected = deliveryDays.length === 0;
 
   return (
-    <div className="min-h-screen bg-opsblack font-body animate-page-fade">
+    <div className="min-h-screen bg-paper font-body animate-page-fade">
       <div className="max-w-2xl mx-auto px-6 py-10">
 
         {/* Ops header */}
@@ -196,10 +196,10 @@ export default function OnboardingPage() {
           <span className="tag text-amber">Configuration</span>
         </div>
 
-        <h1 className="font-display font-bold text-3xl text-parchment tracking-tight mb-2 uppercase">
+        <h1 className="font-display font-bold text-3xl text-ink tracking-tight mb-2 uppercase">
           Configure your brief
         </h1>
-        <p className="text-parchment text-base leading-reading mb-1">
+        <p className="text-ink text-base leading-reading mb-1">
           Tell our agents what to monitor. Describe your interests in plain
           English — they&apos;ll figure out where to look.
         </p>
@@ -222,7 +222,7 @@ export default function OnboardingPage() {
                     <span className="pulse-dot" />
                   )}
                   <div>
-                    <p className="font-mono text-xs uppercase tracking-widest text-parchment">
+                    <p className="font-mono text-xs uppercase tracking-widest text-ink">
                       {paused ? "Stand-down in effect" : "Agents active"}
                     </p>
                     <p className="font-mono text-xs text-muted mt-1">
@@ -253,7 +253,7 @@ export default function OnboardingPage() {
                     key={p.label}
                     type="button"
                     onClick={() => setInterests(p.text)}
-                    className="tag text-amber hover:bg-amber hover:text-opsblack transition-colors cursor-pointer"
+                    className="tag text-amber hover:bg-ink hover:text-paper hover:border-ink transition-colors cursor-pointer"
                   >
                     {p.label}
                   </button>
@@ -324,7 +324,7 @@ export default function OnboardingPage() {
                       aria-pressed={active}
                       className={`tag cursor-pointer transition-colors ${
                         active
-                          ? "text-opsblack bg-amber border-amber"
+                          ? "text-paper bg-ink border-ink"
                           : "text-muted hover:text-amber"
                       }`}
                     >
@@ -382,8 +382,8 @@ export default function OnboardingPage() {
                 Transmission
               </p>
               <div className="flex items-start gap-3 mb-3">
-                <span className="field-checkbox opacity-50" style={{ background: "#E8A838", borderColor: "#E8A838" }} />
-                <span className="text-parchment text-base leading-reading">
+                <span className="field-checkbox opacity-50" style={{ background: "#A8791B", borderColor: "#A8791B" }} />
+                <span className="text-ink text-base leading-reading">
                   Operations dashboard
                   <span className="block font-mono text-xs text-muted mt-1">
                     Always on — your brief compiles here every scheduled run
@@ -397,7 +397,7 @@ export default function OnboardingPage() {
                   onChange={(e) => setEmailDigest(e.target.checked)}
                   className="field-checkbox"
                 />
-                <span className="text-parchment text-base leading-reading">
+                <span className="text-ink text-base leading-reading">
                   Transmit my brief by email each morning
                   {userEmail && (
                     <span className="block font-mono text-xs text-muted mt-1">

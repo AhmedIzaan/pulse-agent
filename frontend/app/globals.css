@@ -4,27 +4,27 @@
 
 @layer base {
   html {
-    background-color: #0A0E1A;
-    color: #D4CEBC;
+    background-color: #F0E6CF;
+    color: #232936;
   }
 
   body {
     font-family: var(--font-ibm-sans), system-ui, sans-serif;
-    font-weight: 300;
+    font-weight: 400;
     font-size: 17px;
     line-height: 1.7;
-    background-color: #0A0E1A;
-    color: #D4CEBC;
+    background-color: #F0E6CF;
+    color: #232936;
   }
 
   /* Keyboard focus — amber, never browser blue */
   *:focus-visible {
-    outline: 2px solid #E8A838;
+    outline: 2px solid #8A6516;
     outline-offset: 2px;
   }
 
   ::placeholder {
-    color: #6B7280;
+    color: #66707F;
     opacity: 1;
   }
 
@@ -47,12 +47,12 @@
     animation: page-fade 150ms ease;
   }
 
-  /* ── Dividers — amber-tinted, never plain grey ── */
+  /* ── Dividers — amber-tinted, like highlighter rules on a document ── */
   .rule {
-    border-top: 1px solid rgba(232, 168, 56, 0.10);
+    border-top: 1px solid rgba(168, 121, 27, 0.18);
   }
   .rule-section {
-    border-top: 1px solid rgba(232, 168, 56, 0.25);
+    border-top: 1px solid rgba(168, 121, 27, 0.40);
   }
 
   /* ── Stamped tag — sharp corners, mono uppercase, border = currentColor ── */
@@ -70,7 +70,7 @@
 
   /* ── Analyst note — amber left rule + label ── */
   .analyst-note {
-    border-left: 2px solid #E8A838;
+    border-left: 2px solid #A8791B;
     padding-left: 12px;
   }
   .analyst-note-label {
@@ -79,24 +79,24 @@
     font-size: 11px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: #E8A838;
+    color: #8A6516;
     margin-bottom: 4px;
   }
 
   /* ── Intelligence file entry — the signature amber left rule ── */
   .file-entry {
-    border-left: 3px solid rgba(232, 168, 56, 0.35);
+    border-left: 3px solid rgba(168, 121, 27, 0.45);
     padding-left: 20px;
     transition: border-color 150ms ease;
   }
   .file-entry:hover {
-    border-left-color: #E8A838;
+    border-left-color: #A8791B;
   }
 
   /* ── Buttons — uppercase mono label, zero radius, no shadow ── */
   .btn-primary {
-    background: #E8A838;
-    color: #0A0E1A;
+    background: #232936;
+    color: #F7F1E1;
     padding: 12px 22px;
     font-family: var(--font-ibm-mono), monospace;
     font-size: 14px;
@@ -111,19 +111,19 @@
     text-decoration: none;
   }
   .btn-primary:hover {
-    background: #A87820;
+    background: #8A6516;
   }
 
   .btn-secondary {
     background: transparent;
-    color: #E8A838;
+    color: #8A6516;
     padding: 12px 22px;
     font-family: var(--font-ibm-mono), monospace;
     font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    border: 1px solid #E8A838;
+    border: 1px solid #A8791B;
     border-radius: 0;
     cursor: pointer;
     transition: background-color 150ms;
@@ -131,19 +131,19 @@
     text-decoration: none;
   }
   .btn-secondary:hover {
-    background: rgba(232, 168, 56, 0.1);
+    background: rgba(168, 121, 27, 0.12);
   }
 
   .btn-ghost {
     background: transparent;
-    color: #6B7280;
+    color: #66707F;
     padding: 12px 22px;
     font-family: var(--font-ibm-mono), monospace;
     font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    border: 1px solid #2A3445;
+    border: 1px solid #D8CCAD;
     border-radius: 0;
     cursor: pointer;
     transition: border-color 150ms, color 150ms;
@@ -151,8 +151,8 @@
     text-decoration: none;
   }
   .btn-ghost:hover {
-    border-color: #E8A838;
-    color: #E8A838;
+    border-color: #A8791B;
+    color: #8A6516;
   }
 
   /* ── Pulsing agent indicator — the one exception to zero-radius ── */
@@ -160,22 +160,13 @@
     width: 6px;
     height: 6px;
     border-radius: 9999px;
-    background: #E8A838;
+    background: #A8791B;
     animation: pulse-dot 2s infinite;
     flex-shrink: 0;
   }
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.3; }
-  }
-
-  /* ── Field note rotation (compiling screen) ── */
-  @keyframes field-note-fade {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .animate-field-note-fade {
-    animation: field-note-fade 500ms ease-out;
   }
 
   /* ── Margin console scan-line (landing page only) ── */
@@ -189,6 +180,15 @@
     animation: scan-vertical 3.2s ease-in-out infinite;
   }
 
+  /* ── Field note rotation (compiling screen) ── */
+  @keyframes field-note-fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-field-note-fade {
+    animation: field-note-fade 500ms ease-out;
+  }
+
   /* ── New entry ticking in ── */
   @keyframes ticker-in {
     from { opacity: 0; transform: translateY(-8px); }
@@ -200,16 +200,16 @@
 
   /* ── Form controls ── */
   .field-input {
-    background: #0F1624;
-    border: 1px solid #2A3445;
-    color: #D4CEBC;
+    background: #FBF7EB;
+    border: 1px solid #D8CCAD;
+    color: #232936;
     font-family: var(--font-ibm-sans), sans-serif;
     font-size: 16px;
     padding: 12px 14px;
   }
   .field-input:focus {
     outline: none;
-    border-color: #E8A838;
+    border-color: #A8791B;
   }
 
   .field-checkbox {
@@ -217,13 +217,13 @@
     width: 16px;
     height: 16px;
     margin-top: 2px;
-    border: 1px solid #D4CEBC;
-    background: #0F1624;
+    border: 1px solid #232936;
+    background: #FBF7EB;
     cursor: pointer;
     flex-shrink: 0;
   }
   .field-checkbox:checked {
-    background: #E8A838;
-    border-color: #E8A838;
+    background: #A8791B;
+    border-color: #A8791B;
   }
 }

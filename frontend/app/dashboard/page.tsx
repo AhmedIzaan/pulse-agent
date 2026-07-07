@@ -79,7 +79,7 @@ export default async function DashboardPage({
   const todayLabel = formatDate(digest?.date ?? new Date().toISOString().slice(0, 10));
 
   return (
-    <div className="min-h-screen bg-opsblack font-body animate-page-fade">
+    <div className="min-h-screen bg-paper font-body animate-page-fade">
       <div className="max-w-2xl mx-auto px-6 py-10">
 
         {/* Ops header */}
@@ -135,7 +135,7 @@ export default async function DashboardPage({
                 Situation report · {todayLabel}
               </p>
               <div className="rule-section mb-3" />
-              <p className="text-parchment text-base leading-reading">
+              <p className="text-ink text-base leading-reading">
                 {digest.article_count} items compiled. Estimated reading time:{" "}
                 {estimateReadingMinutes(digest.articles)} minutes.
               </p>
@@ -151,20 +151,20 @@ export default async function DashboardPage({
               <span className="tag text-muted">No intel available</span>
             </div>
 
-            <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-3 uppercase">
+            <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-3 uppercase">
               {hasProfile ? "Brief not yet compiled." : "No configuration on file."}
             </h2>
 
             {hasProfile ? (
               <>
-                <p className="text-parchment text-base leading-reading mb-4">
+                <p className="text-ink text-base leading-reading mb-4">
                   {paused
                     ? "Agents are standing down — no briefs compile until you resume operations. You can still run them manually below."
                     : "Your next brief compiles on schedule tomorrow morning — or run your agents now."}
                 </p>
                 <div className="analyst-note mb-6">
                   <span className="analyst-note-label">Analyst note</span>
-                  <p className="text-parchment text-base italic leading-reading">
+                  <p className="text-ink text-base italic leading-reading">
                     Ten items, scored and summarized against your configuration.
                   </p>
                 </div>
@@ -172,7 +172,7 @@ export default async function DashboardPage({
               </>
             ) : (
               <>
-                <p className="text-parchment text-base leading-reading mb-4">
+                <p className="text-ink text-base leading-reading mb-4">
                   Agents have not been configured to monitor any topics yet.
                   Open{" "}
                   <Link href="/onboarding" className="text-amber underline underline-offset-2">
@@ -182,7 +182,7 @@ export default async function DashboardPage({
                 </p>
                 <div className="analyst-note">
                   <span className="analyst-note-label">Analyst note</span>
-                  <p className="text-parchment text-base italic leading-reading">
+                  <p className="text-ink text-base italic leading-reading">
                     Once configured, ten items will compile here each morning.
                   </p>
                 </div>

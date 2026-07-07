@@ -1,6 +1,6 @@
 export default function PageLoading() {
   return (
-    <div className="min-h-screen bg-opsblack font-body">
+    <div className="min-h-screen bg-paper font-body">
       <div className="max-w-2xl mx-auto px-6 py-10">
         <header className="flex items-baseline justify-between">
           <span className="font-display font-black text-3xl tracking-tight text-amber uppercase">

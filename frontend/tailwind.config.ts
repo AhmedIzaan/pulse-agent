@@ -9,16 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        opsblack: "#0A0E1A",
-        surface: "#0F1624",
-        "surface-raised": "#151E30",
-        amber: "#E8A838",
-        "amber-dim": "#A87820",
+        // "Daylight brief" — a printed dossier on a desk, not an ops cave
+        paper: "#F0E6CF",          // page background — manila folder
+        surface: "#F7F1E1",        // lighter sheets resting on the folder
+        "surface-raised": "#FBF7EB",
+        ink: "#232936",            // primary text — navy ink
+        muted: "#66707F",          // secondary text
+        amber: "#A8791B",          // accent — highlighter on the document
+        "amber-dim": "#8A6516",    // deeper amber for small text/links
         "field-green": "#4A5C3A",
-        urgent: "#C0392B",
-        parchment: "#D4CEBC",
-        muted: "#6B7280",
-        line: "#2A3445",
+        urgent: "#B23A2E",
+        line: "#D8CCAD",           // hairline borders on manila
       },
       fontFamily: {
         display: ["var(--font-barlow)", "sans-serif"],

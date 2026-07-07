@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import MarginConsole from "../components/MarginConsole";
+import MissionDemo from "../components/MissionDemo";
 
 const AGENTS = [
   {
@@ -23,24 +24,6 @@ const AGENTS = [
     num: "04",
     name: "The Courier",
     body: "Assembles your brief and delivers it. To your inbox, to your dashboard, at the exact time you choose. Every morning, without fail.",
-  },
-];
-
-const HOW_IT_WORKS = [
-  {
-    step: "01",
-    title: "Describe your interests",
-    body: "Type anything — “machine learning research and indie game dev” or “lo-fi music production and climate tech.” Plain English. No dropdowns, no categories.",
-  },
-  {
-    step: "02",
-    title: "Your agents deploy",
-    body: "They go to work immediately — mapping your interests to sources, setting up filters, calibrating what “relevant” means for you specifically.",
-  },
-  {
-    step: "03",
-    title: "Your brief arrives",
-    body: "Every morning at your chosen time. Eight to twelve items. Each one with a summary and an analyst note explaining why it made the cut.",
   },
 ];
 
@@ -106,7 +89,7 @@ export default async function HomePage() {
   if (userId) redirect("/dashboard");
 
   return (
-    <div className="min-h-screen bg-opsblack font-body animate-page-fade">
+    <div className="min-h-screen bg-paper font-body animate-page-fade">
       <MarginConsole />
       <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 py-10">
 
@@ -135,11 +118,11 @@ export default async function HomePage() {
             <span className="tag text-amber">Four agents. One brief. Every morning.</span>
           </div>
 
-          <h1 className="font-display font-black text-6xl md:text-7xl text-parchment tracking-tight leading-[0.95] mb-6 uppercase">
+          <h1 className="font-display font-black text-6xl md:text-7xl text-ink tracking-tight leading-[0.95] mb-6 uppercase">
             The web read.<br />So you don&apos;t have to.
           </h1>
 
-          <p className="text-parchment text-lg leading-reading mb-8 max-w-xl">
+          <p className="text-ink text-lg leading-reading mb-8 max-w-xl">
             Tell us what you care about — in plain English. Our agents go out
             overnight, scan hundreds of sources, cut the noise, and file your
             personal brief before you wake up.
@@ -163,10 +146,10 @@ export default async function HomePage() {
             Meet your team
           </span>
         </div>
-        <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-2 uppercase">
+        <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-2 uppercase">
           Four agents work through the night
         </h2>
-        <p className="text-parchment text-lg leading-reading mb-8 max-w-xl">
+        <p className="text-ink text-lg leading-reading mb-8 max-w-xl">
           So your morning takes six minutes, not sixty.
         </p>
 
@@ -176,10 +159,10 @@ export default async function HomePage() {
               <span className="font-mono text-xs text-amber uppercase tracking-widest">
                 Agent {agent.num}
               </span>
-              <p className="font-display font-bold text-2xl text-parchment tracking-tight mt-1 mb-2 uppercase">
+              <p className="font-display font-bold text-2xl text-ink tracking-tight mt-1 mb-2 uppercase">
                 {agent.name}
               </p>
-              <p className="text-parchment text-base leading-reading">{agent.body}</p>
+              <p className="text-ink text-base leading-reading">{agent.body}</p>
             </div>
           ))}
         </div>
@@ -190,7 +173,7 @@ export default async function HomePage() {
             Sources monitored
           </span>
         </div>
-        <p className="text-parchment text-base leading-reading mb-4 max-w-xl">
+        <p className="text-ink text-base leading-reading mb-4 max-w-xl">
           No invented headlines, no hallucinated citations. Every item in your
           brief links back to where it was actually published.
         </p>
@@ -210,22 +193,12 @@ export default async function HomePage() {
             Operating procedure
           </span>
         </div>
-        <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-8 uppercase">
+        <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-8 uppercase">
           Up and running in two minutes
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-8 mb-12">
-          {HOW_IT_WORKS.map((item) => (
-            <div key={item.step}>
-              <span className="font-mono text-xs text-amber block mb-2">
-                {item.step}
-              </span>
-              <p className="font-display font-semibold text-xl text-parchment mb-1 uppercase tracking-tight">
-                {item.title}
-              </p>
-              <p className="text-parchment text-base leading-reading">{item.body}</p>
-            </div>
-          ))}
+        <div className="mb-12 max-w-3xl">
+          <MissionDemo />
         </div>
 
         <div className="rule-section mb-12" />
@@ -236,7 +209,7 @@ export default async function HomePage() {
             Why MakeDigest
           </span>
         </div>
-        <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-8 uppercase">
+        <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-8 uppercase">
           Not a newsletter. Not a feed. A brief.
         </h2>
 
@@ -246,7 +219,7 @@ export default async function HomePage() {
               <p className="font-display font-semibold text-xl text-amber mb-1 uppercase tracking-tight">
                 {point.title}
               </p>
-              <p className="text-parchment text-base leading-reading">{point.body}</p>
+              <p className="text-ink text-base leading-reading">{point.body}</p>
             </div>
           ))}
         </div>
@@ -259,7 +232,7 @@ export default async function HomePage() {
             Situation report · sample
           </span>
         </div>
-        <p className="text-parchment text-lg mb-8 max-w-xl">
+        <p className="text-ink text-lg mb-8 max-w-xl">
           This is what a brief looks like on arrival. Field reports, analyst
           notes, and nothing you didn&apos;t ask for.
         </p>
@@ -275,13 +248,13 @@ export default async function HomePage() {
                   {entry.time}
                 </span>
               </div>
-              <h3 className="font-display font-bold text-3xl text-parchment leading-tight tracking-tight mb-3">
+              <h3 className="font-display font-bold text-3xl text-ink leading-tight tracking-tight mb-3">
                 {entry.title}
               </h3>
-              <p className="text-parchment text-base leading-reading mb-4">{entry.body}</p>
+              <p className="text-ink text-base leading-reading mb-4">{entry.body}</p>
               <div className="analyst-note">
                 <span className="analyst-note-label">Analyst note</span>
-                <p className="text-parchment text-base italic leading-reading">{entry.note}</p>
+                <p className="text-ink text-base italic leading-reading">{entry.note}</p>
               </div>
             </article>
           ))}
@@ -295,7 +268,7 @@ export default async function HomePage() {
             On file
           </span>
         </div>
-        <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-8 uppercase">
+        <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-8 uppercase">
           What people are reading about
         </h2>
 
@@ -303,7 +276,7 @@ export default async function HomePage() {
           {SAMPLE_CONFIGURATIONS.map((config, i) => (
             <div key={config} className="analyst-note">
               <span className="analyst-note-label">Configuration #{String(i + 1).padStart(4, "0")}</span>
-              <p className="text-parchment text-base italic leading-reading">
+              <p className="text-ink text-base italic leading-reading">
                 &ldquo;{config}&rdquo;
               </p>
             </div>
@@ -317,10 +290,10 @@ export default async function HomePage() {
           <div className="mb-2">
             <span className="tag text-amber">Free to deploy</span>
           </div>
-          <h2 className="font-display font-bold text-4xl text-parchment tracking-tight mb-3 uppercase">
+          <h2 className="font-display font-bold text-4xl text-ink tracking-tight mb-3 uppercase">
             Your first brief is one conversation away.
           </h2>
-          <p className="text-parchment text-lg leading-reading mb-8">
+          <p className="text-ink text-lg leading-reading mb-8">
             Tell us what matters to you. We&apos;ll handle everything else.
           </p>
           <Link href="/sign-up" className="btn-primary">

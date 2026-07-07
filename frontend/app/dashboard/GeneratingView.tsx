@@ -91,10 +91,10 @@ export default function GeneratingView() {
         <div className="mb-4">
           <span className="tag text-urgent">Signal lost</span>
         </div>
-        <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-3 uppercase">
+        <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-3 uppercase">
           This is taking longer than it should.
         </h2>
-        <p className="text-parchment text-base leading-reading mb-8">
+        <p className="text-ink text-base leading-reading mb-8">
           Agents may still be compiling in the background. Reload in a minute —
           your brief will appear once it lands.
         </p>
@@ -123,7 +123,7 @@ export default function GeneratingView() {
         ))}
       </div>
 
-      <h2 className="font-display font-bold text-3xl text-parchment tracking-tight mb-10 uppercase">
+      <h2 className="font-display font-bold text-3xl text-ink tracking-tight mb-10 uppercase">
         Reading the web so you don&apos;t have to.
       </h2>
 
@@ -131,7 +131,7 @@ export default function GeneratingView() {
       <div className="max-w-md min-h-[4rem]">
         <div key={noteIndex} className="analyst-note text-left inline-block animate-field-note-fade">
           <span className="analyst-note-label">Field note</span>
-          <p className="text-parchment text-base italic leading-reading">
+          <p className="text-ink text-base italic leading-reading">
             {FIELD_NOTES[noteIndex]}
           </p>
         </div>

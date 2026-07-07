@@ -84,7 +84,7 @@ export default function ArticleEntry({
         )}
       </div>
 
-      <h2 className="font-display font-bold text-3xl text-parchment leading-tight tracking-tight mb-3">
+      <h2 className="font-display font-bold text-3xl text-ink leading-tight tracking-tight mb-3">
         <a
           href={article.url}
           target="_blank"
@@ -97,13 +97,13 @@ export default function ArticleEntry({
       </h2>
 
       {article.summary && (
-        <p className="text-parchment text-base leading-reading mb-4">{article.summary}</p>
+        <p className="text-ink text-base leading-reading mb-4">{article.summary}</p>
       )}
 
       {article.why_it_matters && (
         <div className="analyst-note mb-4">
           <span className="analyst-note-label">Analyst note</span>
-          <p className="text-parchment text-base italic leading-reading">
+          <p className="text-ink text-base italic leading-reading">
             {article.why_it_matters}
           </p>
         </div>

@@ -33,7 +33,7 @@ export default function RunDigestButton() {
         <p className="font-mono text-xs uppercase tracking-widest text-urgent mb-2">
           Signal lost
         </p>
-        <p className="text-parchment text-base leading-reading mb-3">
+        <p className="text-ink text-base leading-reading mb-3">
           Could not reach the agents. Make sure your configuration is saved and try again.
         </p>
         <button onClick={() => setState("idle")} className="btn-ghost">
