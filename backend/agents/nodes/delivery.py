@@ -24,33 +24,33 @@ def _build_email_html(articles: list[SynthesizedArticle], digest_date: str) -> s
         summary = html.escape(a["summary"])
         why = html.escape(a["why_it_matters"])
         ref = str(i + 1).zfill(4)
-        border_top = "border-top: 1px solid #2A3445; margin-top: 28px; padding-top: 28px;" if i > 0 else ""
+        border_top = "border-top: 1px solid #DCCFAC; margin-top: 28px; padding-top: 28px;" if i > 0 else ""
         entries_html += f"""
         <tr><td style="{border_top}">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td style="font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.1em;
-                         text-transform: uppercase; color: #E8A838;">
+                         text-transform: uppercase; color: #8A6516;">
                 #{ref} &middot; {source}
               </td>
             </tr>
           </table>
-          <h2 style="font-size: 20px; font-weight: 700; color: #D4CEBC; margin: 12px 0;
+          <h2 style="font-size: 20px; font-weight: 700; color: #232936; margin: 12px 0;
                      line-height: 1.3; letter-spacing: -0.01em; font-family: Arial, Helvetica, sans-serif;">
-            <a href="{url}" style="color: #D4CEBC; text-decoration: none;">{title}</a>
+            <a href="{url}" style="color: #232936; text-decoration: none;">{title}</a>
           </h2>
-          <p style="font-size: 14px; color: #A8AFBD; line-height: 1.7; margin: 0 0 14px 0;
+          <p style="font-size: 14px; color: #66707F; line-height: 1.7; margin: 0 0 14px 0;
                     font-family: Arial, Helvetica, sans-serif;">
             {summary}
           </p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="border-left: 2px solid #E8A838;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="border-left: 2px solid #A8791B;">
             <tr>
               <td style="padding: 2px 0 2px 12px;">
                 <div style="font-family: 'Courier New', monospace; font-size: 10px; letter-spacing: 0.12em;
-                            text-transform: uppercase; color: #E8A838; margin-bottom: 4px;">
+                            text-transform: uppercase; color: #8A6516; margin-bottom: 4px;">
                   Analyst note
                 </div>
-                <p style="font-size: 13px; color: #D4CEBC; font-style: italic; line-height: 1.6; margin: 0;
+                <p style="font-size: 13px; color: #232936; font-style: italic; line-height: 1.6; margin: 0;
                           font-family: Arial, Helvetica, sans-serif;">
                   {why}
                 </p>
@@ -63,31 +63,31 @@ def _build_email_html(articles: list[SynthesizedArticle], digest_date: str) -> s
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MakeDigest — {digest_date}</title></head>
-<body style="margin: 0; padding: 0; background-color: #0A0E1A;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#0A0E1A">
+<body style="margin: 0; padding: 0; background-color: #F0E6CF;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#F0E6CF">
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; padding: 40px 24px;">
 
         <tr><td>
           <span style="font-family: Arial, Helvetica, sans-serif; font-size: 26px; font-weight: 900;
-                       letter-spacing: -0.01em; color: #E8A838; text-transform: uppercase;">MakeDigest</span>
+                       letter-spacing: -0.01em; color: #8A6516; text-transform: uppercase;">MakeDigest</span>
         </td></tr>
-        <tr><td style="font-family: 'Courier New', monospace; font-size: 11px; color: #6B7280;
+        <tr><td style="font-family: 'Courier New', monospace; font-size: 11px; color: #66707F;
                        letter-spacing: 0.1em; padding: 8px 0 4px 0;">
           DAILY BRIEF &middot; {digest_date.upper()}
         </td></tr>
-        <tr><td style="border-top: 1px solid #2A3445; padding-top: 4px;"></td></tr>
-        <tr><td style="border-top: 1px solid #2A3445; padding-bottom: 28px;"></td></tr>
+        <tr><td style="border-top: 1px solid #DCCFAC; padding-top: 4px;"></td></tr>
+        <tr><td style="border-top: 1px solid #DCCFAC; padding-bottom: 28px;"></td></tr>
 
-        <tr><td style="font-family: 'Courier New', monospace; font-size: 12px; color: #E8A838;
+        <tr><td style="font-family: 'Courier New', monospace; font-size: 12px; color: #8A6516;
                        letter-spacing: 0.08em; padding-bottom: 28px;">
           SITUATION REPORT &middot; {len(articles)} ITEMS COMPILED
         </td></tr>
 
         {entries_html}
 
-        <tr><td style="border-top: 1px solid #2A3445; margin-top: 40px; padding-top: 24px;">
-          <p style="font-family: 'Courier New', monospace; font-size: 11px; color: #6B7280;
+        <tr><td style="border-top: 1px solid #DCCFAC; margin-top: 40px; padding-top: 24px;">
+          <p style="font-family: 'Courier New', monospace; font-size: 11px; color: #66707F;
                     letter-spacing: 0.06em; margin: 0; text-transform: uppercase;">
             Agents operate continuously. Ten items. Every morning.
           </p>
