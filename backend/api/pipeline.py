@@ -73,8 +73,15 @@ _WEEKDAY_CODES = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 def _local_now(tz_name: str) -> datetime:
     try:
         return datetime.now(ZoneInfo(tz_name or "UTC"))
-    except Exception:
-        return datetime.now(ZoneInfo("UTC"))
+    except Exception as exc:
+        # A silent UTC fallback here once shifted every user's schedule by
+        # their UTC offset (missing tzdata on the server) — never hide this.
+        logger.error(
+            "Timezone %r failed to load (%s) — falling back to UTC; "
+            "per-user schedules will be WRONG until fixed (is tzdata installed?)",
+            tz_name, exc,
+        )
+        return datetime.now(dt_timezone.utc)
 
 
 def _is_delivery_day(delivery_days: str, tz_name: str) -> bool:
