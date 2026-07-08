@@ -1,7 +1,7 @@
 import asyncio
 import hmac
 import logging
-from datetime import datetime, timedelta, timezone as dt_timezone
+from datetime import datetime, time, timedelta, timezone as dt_timezone
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
@@ -92,15 +92,12 @@ def _is_delivery_day(delivery_days: str, tz_name: str) -> bool:
     return today_code in days if days else True
 
 
-def _is_delivery_hour(delivery_time: str, tz_name: str) -> bool:
+def _is_delivery_hour(delivery_time: time | None, tz_name: str) -> bool:
     """Whether the current hour (in the user's timezone) matches their chosen
     delivery hour. The cron fires once per hour, so an hour-granularity match
     is exactly one trigger per day — matching minutes would risk missing the
     window entirely if the cron and the profile disagree by even a minute."""
-    try:
-        target_hour = int((delivery_time or "08:00").split(":")[0])
-    except (ValueError, IndexError):
-        target_hour = 8
+    target_hour = delivery_time.hour if delivery_time else 8
     return _local_now(tz_name).hour == target_hour
 
 
