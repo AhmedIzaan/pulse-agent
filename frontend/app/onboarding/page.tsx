@@ -6,10 +6,19 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SiteNav from "../../components/SiteNav";
 
-const DELIVERY_TIMES = [
-  "06:00", "07:00", "08:00", "09:00", "10:00",
-  "12:00", "14:00", "16:00", "18:00", "20:00",
-];
+// Every hour of the day — values stay 24h ("HH:00") for the backend, labels
+// render as 12h AM/PM. Hour granularity only: the scheduler matches on the
+// hour, so finer slots would silently round.
+const DELIVERY_TIMES = Array.from(
+  { length: 24 },
+  (_, h) => `${String(h).padStart(2, "0")}:00`
+);
+
+function formatTime12h(value: string) {
+  const h = parseInt(value.split(":")[0], 10);
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:00 ${h < 12 ? "AM" : "PM"}`;
+}
 
 const WEEKDAYS: { code: string; label: string }[] = [
   { code: "mon", label: "Mon" },
@@ -64,7 +73,7 @@ export default function OnboardingPage() {
   const [emailDigest, setEmailDigest] = useState(false);
   const [deliveryDays, setDeliveryDays] = useState<string[]>(ALL_DAYS);
   const [paused, setPaused] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [action, setAction] = useState<"deploy" | "save" | null>(null);
   const [error, setError] = useState("");
   const [prefilling, setPrefilling] = useState(true);
 
@@ -104,11 +113,10 @@ export default function OnboardingPage() {
     loadExisting();
   }, [getToken, apiUrl]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function saveProfile(deployNow: boolean) {
     if (!interests.trim()) return;
 
-    setLoading(true);
+    setAction(deployNow ? "deploy" : "save");
     setError("");
 
     try {
@@ -136,8 +144,9 @@ export default function OnboardingPage() {
         return;
       }
 
-      if (paused) {
-        // Stand-down: save only, no run — agents stay dormant until resumed
+      if (paused || !deployNow) {
+        // Save only — agents deploy at the next scheduled time (or stay
+        // dormant if a stand-down is in effect)
         router.push("/dashboard");
         return;
       }
@@ -157,8 +166,13 @@ export default function OnboardingPage() {
     } catch {
       setError("Could not reach the agents. Check your connection.");
     } finally {
-      setLoading(false);
+      setAction(null);
     }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    saveProfile(!paused);
   }
 
   function toggleDay(code: string) {
@@ -298,7 +312,7 @@ export default function OnboardingPage() {
                   className="field-input font-mono text-base pr-10 appearance-none cursor-pointer"
                 >
                   {DELIVERY_TIMES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>{formatTime12h(t)}</option>
                   ))}
                 </select>
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-muted">
@@ -306,7 +320,7 @@ export default function OnboardingPage() {
                 </span>
               </div>
               <p className="font-mono text-xs text-muted mt-2">
-                Agents compile your brief at this time each morning.
+                Agents compile your brief at this time on every scheduled day.
               </p>
             </div>
 
@@ -417,22 +431,40 @@ export default function OnboardingPage() {
             )}
 
             {/* Submit */}
-            <div className="flex items-center gap-6">
-              <button
-                type="submit"
-                disabled={loading || !interests.trim() || noDaysSelected}
-                className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {loading
-                  ? "Saving..."
-                  : paused
-                  ? "Save configuration"
-                  : "Deploy agents"}
-              </button>
-              <span className="font-mono text-xs text-muted">
-                Edit this configuration any time.
-              </span>
+            <div className="flex flex-wrap items-center gap-4">
+              {paused ? (
+                <button
+                  type="submit"
+                  disabled={action !== null || !interests.trim() || noDaysSelected}
+                  className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {action ? "Saving..." : "Save configuration"}
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="submit"
+                    disabled={action !== null || !interests.trim() || noDaysSelected}
+                    className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {action === "deploy" ? "Deploying..." : "Deploy now"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => saveProfile(false)}
+                    disabled={action !== null || !interests.trim() || noDaysSelected}
+                    className="btn-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {action === "save" ? "Saving..." : "Save for scheduled run"}
+                  </button>
+                </>
+              )}
             </div>
+            <p className="font-mono text-xs text-muted mt-3">
+              {paused
+                ? "Edit this configuration any time."
+                : `Deploy now compiles a brief immediately. Save holds your changes for the next scheduled run at ${formatTime12h(deliveryTime)}.`}
+            </p>
 
           </form>
         )}
