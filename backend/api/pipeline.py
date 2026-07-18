@@ -11,6 +11,7 @@ from core.auth import get_current_user
 from core.config import settings
 from db.models import Digest, InterestProfile, User
 from db.session import AsyncSessionLocal
+from scheduler.cleanup import purge_expired_archives
 
 router = APIRouter(prefix="/api")
 logger = logging.getLogger(__name__)
@@ -164,6 +165,12 @@ async def _run_all_pipelines() -> None:
         len(clerk_ids), paused_count, wrong_day_count, wrong_hour_count, already_done_count,
     )
     await asyncio.gather(*[_run_pipeline(cid) for cid in clerk_ids], return_exceptions=True)
+
+    # Archive retention: keep only yesterday's digest, purge everything older
+    try:
+        await purge_expired_archives()
+    except Exception:
+        logger.exception("Cron: archive purge failed — will retry next tick")
 
 
 @router.post("/pipeline/cron", status_code=202)
